@@ -142,7 +142,11 @@ std::tuple<int, float, float> QGTagger::calcVariables(const reco::Jet *jet, edm:
       auto part = static_cast<const pat::PackedCandidate*>(daughter);
 
       if(part->charge()){
-        if(!(part->fromPV() > 1 && part->trackHighPurity())) continue;
+
+        //if(!(part->fromPV() > 1 && part->trackHighPurity())) continue;
+	bool isFromPV = (part->status() & 3 )>1;
+        if(!( isFromPV && part->trackHighPurity())) continue;
+
         if(useQC){
           if((part->dz()*part->dz())/(part->dzError()*part->dzError()) > 25.) continue;
           if((part->dxy()*part->dxy())/(part->dxyError()*part->dxyError()) < 25.) ++mult;
