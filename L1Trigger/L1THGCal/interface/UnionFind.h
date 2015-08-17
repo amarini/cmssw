@@ -139,7 +139,8 @@ namespace HGCalTriggerBackend{
             }
         };
 
-};
+
+}; // end namespace
 
 // -----------------------------------
 // Local Variables:
