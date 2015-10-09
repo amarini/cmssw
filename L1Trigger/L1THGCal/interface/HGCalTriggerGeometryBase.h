@@ -38,8 +38,16 @@
 
 class HGCalTriggerGeometryBase;
 
+
 namespace HGCalTriggerGeometry {
+
+
+  // fwd declaration
+  class HGCalTriggerTopologyFinder;
+
+
   class TriggerCell {
+  friend class HGCalTriggerGeometry::HGCalTriggerTopologyFinder;
   public:
     typedef std::unordered_set<unsigned> list_type;
 
@@ -75,6 +83,7 @@ namespace HGCalTriggerGeometry {
   };
   
   class Module {
+  friend class HGCalTriggerGeometry::HGCalTriggerTopologyFinder;
   public:
     typedef std::unordered_set<unsigned> list_type;
     typedef std::unordered_multimap<unsigned,unsigned> tc_map_type;
@@ -120,6 +129,7 @@ namespace HGCalTriggerGeometry {
 }  
 
 class HGCalTriggerGeometryBase { 
+ friend class HGCalTriggerGeometry::HGCalTriggerTopologyFinder;
  public:  
   struct es_info {
     edm::ESHandle<HGCalGeometry> geom_ee, geom_fh, geom_bh;
@@ -172,6 +182,5 @@ class HGCalTriggerGeometryBase {
 
 #include "FWCore/PluginManager/interface/PluginFactory.h"
 typedef edmplugin::PluginFactory< HGCalTriggerGeometryBase* (const edm::ParameterSet&) > HGCalTriggerGeometryFactory;
-
 
 #endif
