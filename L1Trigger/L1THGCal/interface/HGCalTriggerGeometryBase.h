@@ -42,145 +42,191 @@ class HGCalTriggerGeometryBase;
 namespace HGCalTriggerGeometry {
 
 
-  // fwd declaration
-  class HGCalTriggerTopologyFinder;
+
+    // fwd declaration
+    class HGCalTriggerTopologyFinder;
+    class HGCalTriggerGeometryModifier;
 
 
-  class TriggerCell {
-  friend class HGCalTriggerGeometry::HGCalTriggerTopologyFinder;
-  public:
-    typedef std::unordered_set<unsigned> list_type;
+    class TriggerCell {
+        friend class HGCalTriggerGeometry::HGCalTriggerTopologyFinder; // REMOVE
+        friend class HGCalTriggerGeometry::HGCalTriggerGeometryModifier;
+        public:
+        typedef std::unordered_set<unsigned> list_type;
 
-    TriggerCell(unsigned tc_id, unsigned mod_id, const GlobalPoint& pos,
+        TriggerCell(unsigned tc_id, unsigned mod_id, const GlobalPoint& pos,
                 const list_type& neighbs, const list_type& comps) :
-      trigger_cell_id_(tc_id),
-      module_id_(mod_id),
-      position_(pos),
-      neighbours_(neighbs),
-      components_(comps)
-      {}
-    ~TriggerCell() {}
-   
-    
-    unsigned triggerCellId() const { return trigger_cell_id_; }
-    unsigned moduleId()      const { return module_id_; }
-    
-    bool containsCell(const unsigned cell) const {
-      return ( components_.find(cell) != components_.end() );
-    }
+            trigger_cell_id_(tc_id),
+            module_id_(mod_id),
+            position_(pos),
+            neighbours_(neighbs),
+            components_(comps)
+        {}
+        ~TriggerCell() {}
 
-    const GlobalPoint& position() const { return position_; }
 
-    const std::unordered_set<unsigned>& neighbours() const { return neighbours_; }
-    const std::unordered_set<unsigned>& components() const { return components_; }
+        unsigned triggerCellId() const { return trigger_cell_id_; }
+        unsigned moduleId()      const { return module_id_; }
 
-  private:
-    unsigned trigger_cell_id_; // the ID of this trigger cell
-    unsigned module_id_; // module this TC belongs to
-    GlobalPoint position_;
-    list_type neighbours_; // neighbouring trigger cells
-    list_type components_; // contained HGC cells
-  };
-  
-  class Module {
-  friend class HGCalTriggerGeometry::HGCalTriggerTopologyFinder;
-  public:
-    typedef std::unordered_set<unsigned> list_type;
-    typedef std::unordered_multimap<unsigned,unsigned> tc_map_type;
-    
-    Module(unsigned mod_id, const GlobalPoint& pos,
-           const list_type& neighbs, const list_type& comps,
-           const tc_map_type& tc_comps):
-      module_id_(mod_id),
-      position_(pos),
-      neighbours_(neighbs),
-      components_(comps),
-      tc_components_(tc_comps)  
-      {}
-    ~Module() {}
-    
-    unsigned moduleId()      const { return module_id_; }
+        bool containsCell(const unsigned cell) const {
+            return ( components_.find(cell) != components_.end() );
+        }
 
-    bool containsTriggerCell(const unsigned trig_cell) const {
-      return ( components_.find(trig_cell) != components_.end() );
-    }
+        const GlobalPoint& position() const { return position_; }
 
-    bool containsCell(const unsigned cell) const {
-      for( const auto& value : tc_components_ ) {
-        if( value.second == cell ) return true;
-      }
-      return false;
-    }
+        const std::unordered_set<unsigned>& neighbours() const { return neighbours_; }
+        const std::unordered_set<unsigned>& components() const { return components_; }
 
-    const GlobalPoint& position() const { return position_; }
+        private:
+        unsigned trigger_cell_id_; // the ID of this trigger cell
+        unsigned module_id_; // module this TC belongs to
+        GlobalPoint position_;
+        list_type neighbours_; // neighbouring trigger cells
+        list_type components_; // contained HGC cells
+    };
 
-    const list_type& neighbours() const { return neighbours_; }
-    const list_type& components() const { return components_; }
+    class Module {
+        friend class HGCalTriggerGeometry::HGCalTriggerTopologyFinder; // REMOVE
+        friend class HGCalTriggerGeometry::HGCalTriggerGeometryModifier;
+        public:
+        typedef std::unordered_set<unsigned> list_type;
+        typedef std::unordered_multimap<unsigned,unsigned> tc_map_type;
 
-    const tc_map_type& triggerCellComponents() const { return tc_components_; }
+        Module(unsigned mod_id, const GlobalPoint& pos,
+                const list_type& neighbs, const list_type& comps,
+                const tc_map_type& tc_comps):
+            module_id_(mod_id),
+            position_(pos),
+            neighbours_(neighbs),
+            components_(comps),
+            tc_components_(tc_comps)  
+        {}
+        ~Module() {}
 
-  private:    
-    unsigned module_id_; // module this TC belongs to
-    GlobalPoint position_;
-    list_type neighbours_; // neighbouring Modules
-    list_type components_; // contained HGC trigger cells
-    tc_map_type tc_components_; // cells contained by trigger cells
-  };
+        unsigned moduleId()      const { return module_id_; }
+
+        bool containsTriggerCell(const unsigned trig_cell) const {
+            return ( components_.find(trig_cell) != components_.end() );
+        }
+
+        bool containsCell(const unsigned cell) const {
+            for( const auto& value : tc_components_ ) {
+                if( value.second == cell ) return true;
+            }
+            return false;
+        }
+
+        const GlobalPoint& position() const { return position_; }
+
+        const list_type& neighbours() const { return neighbours_; }
+        const list_type& components() const { return components_; }
+
+        const tc_map_type& triggerCellComponents() const { return tc_components_; }
+
+        private:    
+        unsigned module_id_; // module this TC belongs to
+        GlobalPoint position_;
+        list_type neighbours_; // neighbouring Modules
+        list_type components_; // contained HGC trigger cells
+        tc_map_type tc_components_; // cells contained by trigger cells
+    };
 }  
 
 class HGCalTriggerGeometryBase { 
- friend class HGCalTriggerGeometry::HGCalTriggerTopologyFinder;
- public:  
-  struct es_info {
-    edm::ESHandle<HGCalGeometry> geom_ee, geom_fh, geom_bh;
-    edm::ESHandle<HGCalTopology> topo_ee, topo_fh, topo_bh;
-  };
+    friend class HGCalTriggerGeometry::HGCalTriggerTopologyFinder; // REMOVE
+    friend class HGCalTriggerGeometry::HGCalTriggerGeometryModifier;
 
-  typedef std::unordered_map<unsigned,unsigned> geom_map;
-  typedef std::unordered_map<unsigned,std::unique_ptr<const HGCalTriggerGeometry::Module> > module_map;
-  typedef std::unordered_map<unsigned,std::unique_ptr<const HGCalTriggerGeometry::TriggerCell> > trigger_cell_map;
 
-  HGCalTriggerGeometryBase(const edm::ParameterSet& conf);
-  virtual ~HGCalTriggerGeometryBase() {}
+    public:  
+    struct es_info {
+        edm::ESHandle<HGCalGeometry> geom_ee, geom_fh, geom_bh;
+        edm::ESHandle<HGCalTopology> topo_ee, topo_fh, topo_bh;
+    };
 
-  const std::string& name() const { return name_; } 
+    typedef std::unordered_map<unsigned,unsigned> geom_map;
+    typedef std::unordered_map<unsigned,std::unique_ptr<const HGCalTriggerGeometry::Module> > module_map;
+    typedef std::unordered_map<unsigned,std::unique_ptr<const HGCalTriggerGeometry::TriggerCell> > trigger_cell_map;
 
-  const std::string& eeSDName() const { return ee_sd_name_; } 
-  const std::string& fhSDName() const { return fh_sd_name_; } 
-  const std::string& bhSDName() const { return bh_sd_name_; } 
+    HGCalTriggerGeometryBase(const edm::ParameterSet& conf);
+    virtual ~HGCalTriggerGeometryBase() {}
 
-  // non-const access to the geometry class
-  virtual void initialize( const es_info& ) = 0;
-  void reset();
-  
-  // const access to the geometry class  
-  // all of the get*From* functions return nullptr if the thing you
-  // ask for doesn't exist
-  const std::unique_ptr<const HGCalTriggerGeometry::TriggerCell>& getTriggerCellFromCell( const unsigned cell_det_id ) const;
-  const std::unique_ptr<const HGCalTriggerGeometry::Module>& getModuleFromCell( const unsigned cell_det_id ) const;
-  const std::unique_ptr<const HGCalTriggerGeometry::Module>& getModuleFromTriggerCell( const unsigned trigger_cell_det_id ) const;
+    const std::string& name() const { return name_; } 
 
-  const geom_map& cellsToTriggerCellsMap() const { return cells_to_trigger_cells_; }
-  const geom_map& triggerCellsToModulesMap() const { return trigger_cells_to_modules_; }
-  
-  const module_map& modules() const { return modules_; }
-  const trigger_cell_map& triggerCells() const { return trigger_cells_; }
+    const std::string& eeSDName() const { return ee_sd_name_; } 
+    const std::string& fhSDName() const { return fh_sd_name_; } 
+    const std::string& bhSDName() const { return bh_sd_name_; } 
 
- protected:
-  geom_map cells_to_trigger_cells_;
-  geom_map trigger_cells_to_modules_;
-  
-  module_map modules_;
-  trigger_cell_map trigger_cells_;
-  
- private:
-  const std::string name_;
-  const std::string ee_sd_name_;
-  const std::string fh_sd_name_;
-  const std::string bh_sd_name_;  
+    // non-const access to the geometry class
+    std::vector<HGCalTriggerGeometry::HGCalTriggerGeometryModifier*> geometryModifiers_; // TODO, private + Set + Get
+    void initModifiers();
+    virtual void initialize( const es_info& ) = 0;
+    void reset();
+
+    // const access to the geometry class  
+    // all of the get*From* functions return nullptr if the thing you
+    // ask for doesn't exist
+    const std::unique_ptr<const HGCalTriggerGeometry::TriggerCell>& getTriggerCellFromCell( const unsigned cell_det_id ) const;
+    const std::unique_ptr<const HGCalTriggerGeometry::Module>& getModuleFromCell( const unsigned cell_det_id ) const;
+    const std::unique_ptr<const HGCalTriggerGeometry::Module>& getModuleFromTriggerCell( const unsigned trigger_cell_det_id ) const;
+
+    const geom_map& cellsToTriggerCellsMap() const { return cells_to_trigger_cells_; }
+    const geom_map& triggerCellsToModulesMap() const { return trigger_cells_to_modules_; }
+
+    const module_map& modules() const { return modules_; }
+    const trigger_cell_map& triggerCells() const { return trigger_cells_; }
+
+    protected:
+    geom_map cells_to_trigger_cells_;
+    geom_map trigger_cells_to_modules_;
+
+    module_map modules_;
+    trigger_cell_map trigger_cells_;
+    // -- used by the modifier
+    //
+    typedef std::unordered_map<unsigned, std::unique_ptr<HGCalTriggerGeometry::Module> > module_construction_container;
+    typedef std::unordered_map<unsigned, std::unique_ptr<HGCalTriggerGeometry::TriggerCell> > trigger_cell_construction_container;
+
+    module_construction_container modules_inconstruction_;
+    trigger_cell_construction_container triggercells_inconstruction_;
+
+    // TODO, move in the CC
+    void finalizeInitialization(){ 
+        // --- make maps const. destroy non const maps
+        // these pointeres are released from the inconstruction and cost cast to be placed in the final geometry
+        for( auto& p : modules_inconstruction_) 
+            modules_ . insert( std::make_pair(p.first, std::unique_ptr<const HGCalTriggerGeometry::Module >(p.second.release()))) ;
+        for(auto&p : triggercells_inconstruction_ ) 
+            trigger_cells_ . insert( std::make_pair(p.first, std::unique_ptr<const HGCalTriggerGeometry::TriggerCell>(p.second.release())) );
+        modules_inconstruction_.clear();
+        triggercells_inconstruction_.clear();
+    } 
+    //
+    HGCalTriggerGeometry::TriggerCell* getTriggerCellFromCellInConstruction( const unsigned cell_det_id); 
+
+    HGCalTriggerGeometry::Module* getModuleFromCellInConstruction( const unsigned cell_det_id); 
+    /* FIXME
+       getTriggerCellFromCell
+       getModuleFromTriggerCell
+       trigger_cells_
+       modules_
+
+*/
+
+    private:
+    const std::string name_;
+    const std::string ee_sd_name_;
+    const std::string fh_sd_name_;
+    const std::string bh_sd_name_;  
 };
 
 #include "FWCore/PluginManager/interface/PluginFactory.h"
 typedef edmplugin::PluginFactory< HGCalTriggerGeometryBase* (const edm::ParameterSet&) > HGCalTriggerGeometryFactory;
 
 #endif
+// Local Variables:
+// mode:c++
+// indent-tabs-mode:nil
+// tab-width:4
+// c-basic-offset:4
+// End:
+// vim: tabstop=4 expandtab shiftwidth=4 softtabstop=4 

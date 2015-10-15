@@ -1,4 +1,5 @@
 #include "L1Trigger/L1THGCal/interface/HGCalTriggerGeometryBase.h"
+#include "L1Trigger/L1THGCal/interface/HGCalTriggerTopologyFinder.h"
 
 using namespace HGCalTriggerGeometry;
 
@@ -55,6 +56,27 @@ getModuleFromTriggerCell( const unsigned trigger_cell_det_id ) const {
   }
   return modules_.find(found_mod->second)->second;
 }
+
+void HGCalTriggerGeometryBase::initModifiers(){ 
+	 for (auto &gMod : geometryModifiers_) gMod -> initialize( *this); 
+ }
+
+// the unique pointers don't loose ownership
+HGCalTriggerGeometry::TriggerCell* HGCalTriggerGeometryBase::getTriggerCellFromCellInConstruction( const unsigned cell_det_id) { 
+        auto found_tc = cells_to_trigger_cells_.find(cell_det_id) ; 
+        if (found_tc == cells_to_trigger_cells_.end()) return (TriggerCell*)(NULL);
+        return triggercells_inconstruction_.find( found_tc ->second)->second.get(); 
+    }
+
+HGCalTriggerGeometry::Module* HGCalTriggerGeometryBase::getModuleFromCellInConstruction( const unsigned cell_det_id) { 
+        auto found_tc = cells_to_trigger_cells_.find(cell_det_id) ; 
+        if (found_tc == cells_to_trigger_cells_.end() ) return (Module*)(NULL); 
+        auto found_mod = trigger_cells_to_modules_.find(found_tc->second);
+        if(found_mod == trigger_cells_to_modules_.end() ) return (Module*)(NULL);
+        return modules_inconstruction_ . find( found_mod->second) ->second.get();
+    }
+
+
 
 EDM_REGISTER_PLUGINFACTORY(HGCalTriggerGeometryFactory,
 			   "HGCalTriggerGeometryFactory");

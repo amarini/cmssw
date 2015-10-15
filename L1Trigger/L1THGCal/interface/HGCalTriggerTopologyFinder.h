@@ -27,35 +27,42 @@ namespace HGCalTriggerGeometry{
     typedef uint8_t TopoBits;
 
     enum TopoBit{
-         north   = 1UL <<0 ,
-         south   = 1UL <<1,
-         east    = 1UL <<2,
-         west    = 1UL <<3,
-         up      = 1UL <<4,
-         down    = 1UL <<5,
-         generic = 1UL <<6 // if nswe is not known, not guarrantee to be set if something else is
+        north   = 1UL <<0 ,
+        south   = 1UL <<1,
+        east    = 1UL <<2,
+        west    = 1UL <<3,
+        up      = 1UL <<4,
+        down    = 1UL <<5,
+        generic = 1UL <<6 // if nswe is not known, not guarrantee to be set if something else is
+    };
+
+    // base class for a geometry modifier
+    class HGCalTriggerGeometryModifier{
+        // * general class to be derived from for a geometry modifier, passed into the init
+        public:
+            virtual int initialize(HGCalTriggerGeometryBase &g )  =0;
     };
 
 
-class HGCalTriggerTopologyFinder{	
-   // const HGCalTopology & mTopology; geometry knows about topology
-    const HGCalGeometry & mGeometry;
+    class HGCalTriggerTopologyFinder : public HGCalTriggerGeometry::HGCalTriggerGeometryModifier {	
+        // const HGCalTopology & mTopology; geometry knows about topology
+        const HGCalGeometry & mGeometry;
 
-    // fill tr cell neigh
-    int initTC(HGCalTriggerGeometryBase &);
-    //fill tr module neigh
-    int initTM(HGCalTriggerGeometryBase &);
+        // fill tr cell neigh
+        int initTriggerCells(HGCalTriggerGeometryBase &);
+        //fill tr module neigh
+        int initTriggerModules(HGCalTriggerGeometryBase &);
 
 
-public:
+        public:
 
-    HGCalTriggerTopologyFinder( const HGCalGeometry &g): mGeometry(g) {} 
-   
-    // this is const 
-    inline int initialize(HGCalTriggerGeometryBase &g ) 
-    { return initTC(g) | initTM(g) ; }
-        
-};
+        HGCalTriggerTopologyFinder( const HGCalGeometry &g): mGeometry(g) {} 
+
+        // this is const 
+        inline int initialize(HGCalTriggerGeometryBase &g ) 
+        { return initTriggerCells(g) | initTriggerModules(g) ; }
+
+    };
 
 }; // namespace
 

@@ -2,14 +2,14 @@
 
 using namespace HGCalTriggerGeometry;
 
-int HGCalTriggerGeometry::HGCalTriggerTopologyFinder::initTC(HGCalTriggerGeometryBase & mTriggerGeometry) 
+int HGCalTriggerGeometry::HGCalTriggerTopologyFinder::initTriggerCells(HGCalTriggerGeometryBase & mTriggerGeometry) 
 {
 
     const HGCalTopology& mTopology =  mGeometry.topology () ;
     // I need access to the non-const objects
 
     // loop over cells
-    for( auto & tcell : mTriggerGeometry.trigger_cells_ ) // trigger cells map : unsigned -> triggerCell
+    for( auto & tcell : mTriggerGeometry.triggercells_inconstruction_) // trigger cells map : unsigned -> triggerCell
     {
         std::map< unsigned, HGCalTriggerGeometry::TopoBits >  neigh;
 
@@ -34,12 +34,11 @@ int HGCalTriggerGeometry::HGCalTriggerTopologyFinder::initTC(HGCalTriggerGeometr
         for (auto & n : neigh ) 
         {
             //- find the tr cells that corresponds to the neigh cells
-            unsigned neigh_tc =  mTriggerGeometry . getTriggerCellFromCell( n.first ) -> triggerCellId();
+            unsigned neigh_tc =  mTriggerGeometry . getTriggerCellFromCellInConstruction( n.first ) -> triggerCellId();
             //- remove the cells that are in the trigger cell
             if (neigh_tc == tcell.first) continue; // I am what I am and what I am needs no excuses
             //- add them to the list of neighbours
-	    //I need to cast away constantness :(
-            const_cast<HGCalTriggerGeometry::TriggerCell*> (tcell . second .get()) -> neighbours_ . insert (  neigh_tc ) ; // use n.second if you want directions TODO
+            tcell . second  -> neighbours_ . insert (  neigh_tc ) ; // use n.second if you want directions TODO
         }
     } // tcell loop
 
@@ -47,13 +46,13 @@ int HGCalTriggerGeometry::HGCalTriggerTopologyFinder::initTC(HGCalTriggerGeometr
 }
 
 // ----
-int HGCalTriggerGeometry::HGCalTriggerTopologyFinder::initTM(HGCalTriggerGeometryBase & mTriggerGeometry) 
+int HGCalTriggerGeometry::HGCalTriggerTopologyFinder::initTriggerModules(HGCalTriggerGeometryBase & mTriggerGeometry) 
 {
 
     // I need access to the non-const objects
 
     // loop over modules
-    for( auto & tmod : mTriggerGeometry.modules_ ) //  map : unsigned ->  Module
+    for( auto & tmod : mTriggerGeometry.modules_inconstruction_ ) //  map : unsigned ->  Module
     {
         std::map< unsigned, HGCalTriggerGeometry::TopoBits >  neigh;
 
@@ -69,12 +68,11 @@ int HGCalTriggerGeometry::HGCalTriggerTopologyFinder::initTM(HGCalTriggerGeometr
         for (auto & n : neigh ) 
         {
             //- find the tr cells that corresponds to the neigh cells
-            unsigned neigh_mod =  mTriggerGeometry . getModuleFromTriggerCell( n.first ) -> moduleId();
+            unsigned neigh_mod =  mTriggerGeometry . getModuleFromCellInConstruction( n.first ) -> moduleId();
             //- remove the cells that are in the trigger cell
             if (neigh_mod == tmod.first) continue; // I am what I am and what I am needs no excuses
             //- add them to the list of neighbours
-	    //I need to cast away constantness :(
-            const_cast<HGCalTriggerGeometry::Module*> (tmod . second .get()) -> neighbours_ . insert (  neigh_mod ) ; // use n.second if you want directions TODO
+            tmod . second  -> neighbours_ . insert (  neigh_mod ) ; // use n.second if you want directions TODO
         }
     } // tcell loop
 
