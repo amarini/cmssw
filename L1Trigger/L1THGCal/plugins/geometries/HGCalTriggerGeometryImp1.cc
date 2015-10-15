@@ -142,7 +142,7 @@ void HGCalTriggerGeometryImp1::initialize(const es_info& esInfo)
     // --- call the modifiers
 	initModifiers();
     // --- froze the geometry in the const structures
-	finilizeInitialization();
+	finalizeInitialization();
 }
 
 

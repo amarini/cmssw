@@ -77,6 +77,18 @@ HGCalTriggerGeometry::Module* HGCalTriggerGeometryBase::getModuleFromCellInConst
     }
 
 
+void HGCalTriggerGeometryBase::finalizeInitialization(){ 
+        // --- make maps const. destroy non const maps
+        // these pointeres are released from the inconstruction and cost cast to be placed in the final geometry
+        for( auto& p : modules_inconstruction_) 
+            modules_ . insert( std::make_pair(p.first, std::unique_ptr<const HGCalTriggerGeometry::Module >(p.second.release()))) ;
+        for(auto&p : triggercells_inconstruction_ ) 
+            trigger_cells_ . insert( std::make_pair(p.first, std::unique_ptr<const HGCalTriggerGeometry::TriggerCell>(p.second.release())) );
+        modules_inconstruction_.clear();
+        triggercells_inconstruction_.clear();
+ } 
+
+
 
 EDM_REGISTER_PLUGINFACTORY(HGCalTriggerGeometryFactory,
 			   "HGCalTriggerGeometryFactory");

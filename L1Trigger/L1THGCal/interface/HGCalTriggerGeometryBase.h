@@ -49,7 +49,6 @@ namespace HGCalTriggerGeometry {
 
 
     class TriggerCell {
-        friend class HGCalTriggerGeometry::HGCalTriggerTopologyFinder; // REMOVE
         friend class HGCalTriggerGeometry::HGCalTriggerGeometryModifier;
         public:
         typedef std::unordered_set<unsigned> list_type;
@@ -86,7 +85,6 @@ namespace HGCalTriggerGeometry {
     };
 
     class Module {
-        friend class HGCalTriggerGeometry::HGCalTriggerTopologyFinder; // REMOVE
         friend class HGCalTriggerGeometry::HGCalTriggerGeometryModifier;
         public:
         typedef std::unordered_set<unsigned> list_type;
@@ -133,9 +131,7 @@ namespace HGCalTriggerGeometry {
 }  
 
 class HGCalTriggerGeometryBase { 
-    friend class HGCalTriggerGeometry::HGCalTriggerTopologyFinder; // REMOVE
     friend class HGCalTriggerGeometry::HGCalTriggerGeometryModifier;
-
 
     public:  
     struct es_info {
@@ -158,7 +154,8 @@ class HGCalTriggerGeometryBase {
 
     // non-const access to the geometry class
     std::vector<HGCalTriggerGeometry::HGCalTriggerGeometryModifier*> geometryModifiers_; // TODO, private + Set + Get
-    void initModifiers();
+    void initModifiers(); // must be called inside the init functions
+    void finalizeInitialization(); // must be called after initModifiers, inside the init function
     virtual void initialize( const es_info& ) = 0;
     void reset();
 
@@ -181,36 +178,17 @@ class HGCalTriggerGeometryBase {
 
     module_map modules_;
     trigger_cell_map trigger_cells_;
-    // -- used by the modifier
-    //
+
+
+    // -- used by the modifier -- these are not const. will be cleared by the finilizeInitialization function
     typedef std::unordered_map<unsigned, std::unique_ptr<HGCalTriggerGeometry::Module> > module_construction_container;
     typedef std::unordered_map<unsigned, std::unique_ptr<HGCalTriggerGeometry::TriggerCell> > trigger_cell_construction_container;
-
     module_construction_container modules_inconstruction_;
     trigger_cell_construction_container triggercells_inconstruction_;
 
-    // TODO, move in the CC
-    void finalizeInitialization(){ 
-        // --- make maps const. destroy non const maps
-        // these pointeres are released from the inconstruction and cost cast to be placed in the final geometry
-        for( auto& p : modules_inconstruction_) 
-            modules_ . insert( std::make_pair(p.first, std::unique_ptr<const HGCalTriggerGeometry::Module >(p.second.release()))) ;
-        for(auto&p : triggercells_inconstruction_ ) 
-            trigger_cells_ . insert( std::make_pair(p.first, std::unique_ptr<const HGCalTriggerGeometry::TriggerCell>(p.second.release())) );
-        modules_inconstruction_.clear();
-        triggercells_inconstruction_.clear();
-    } 
-    //
+    // the unique ptr do not loose ownership of these objects!
     HGCalTriggerGeometry::TriggerCell* getTriggerCellFromCellInConstruction( const unsigned cell_det_id); 
-
     HGCalTriggerGeometry::Module* getModuleFromCellInConstruction( const unsigned cell_det_id); 
-    /* FIXME
-       getTriggerCellFromCell
-       getModuleFromTriggerCell
-       trigger_cells_
-       modules_
-
-*/
 
     private:
     const std::string name_;
@@ -218,6 +196,7 @@ class HGCalTriggerGeometryBase {
     const std::string fh_sd_name_;
     const std::string bh_sd_name_;  
 };
+
 
 #include "FWCore/PluginManager/interface/PluginFactory.h"
 typedef edmplugin::PluginFactory< HGCalTriggerGeometryBase* (const edm::ParameterSet&) > HGCalTriggerGeometryFactory;

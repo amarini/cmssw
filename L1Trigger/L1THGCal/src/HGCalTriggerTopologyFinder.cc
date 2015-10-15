@@ -9,7 +9,7 @@ int HGCalTriggerGeometry::HGCalTriggerTopologyFinder::initTriggerCells(HGCalTrig
     // I need access to the non-const objects
 
     // loop over cells
-    for( auto & tcell : mTriggerGeometry.triggercells_inconstruction_) // trigger cells map : unsigned -> triggerCell
+    for( auto & tcell : get_triggercells_inconstruction(mTriggerGeometry)) // trigger cells map : unsigned -> triggerCell
     {
         std::map< unsigned, HGCalTriggerGeometry::TopoBits >  neigh;
 
@@ -34,11 +34,13 @@ int HGCalTriggerGeometry::HGCalTriggerTopologyFinder::initTriggerCells(HGCalTrig
         for (auto & n : neigh ) 
         {
             //- find the tr cells that corresponds to the neigh cells
-            unsigned neigh_tc =  mTriggerGeometry . getTriggerCellFromCellInConstruction( n.first ) -> triggerCellId();
+            //unsigned neigh_tc =  mTriggerGeometry . getTriggerCellFromCellInConstruction( n.first ) -> triggerCellId();
+            unsigned neigh_tc =  getTriggerCellFromCellInConstruction(mTriggerGeometry, n.first ) -> triggerCellId();
             //- remove the cells that are in the trigger cell
             if (neigh_tc == tcell.first) continue; // I am what I am and what I am needs no excuses
             //- add them to the list of neighbours
-            tcell . second  -> neighbours_ . insert (  neigh_tc ) ; // use n.second if you want directions TODO
+            //tcell . second  -> neighbours_ . insert (  neigh_tc ) ; // use n.second if you want directions TODO
+	    insertNeighbour( tcell.second.get(), neigh_tc);
         }
     } // tcell loop
 
@@ -52,7 +54,7 @@ int HGCalTriggerGeometry::HGCalTriggerTopologyFinder::initTriggerModules(HGCalTr
     // I need access to the non-const objects
 
     // loop over modules
-    for( auto & tmod : mTriggerGeometry.modules_inconstruction_ ) //  map : unsigned ->  Module
+    for( auto & tmod : get_modules_inconstruction(mTriggerGeometry) ) //  map : unsigned ->  Module
     {
         std::map< unsigned, HGCalTriggerGeometry::TopoBits >  neigh;
 
@@ -68,11 +70,12 @@ int HGCalTriggerGeometry::HGCalTriggerTopologyFinder::initTriggerModules(HGCalTr
         for (auto & n : neigh ) 
         {
             //- find the tr cells that corresponds to the neigh cells
-            unsigned neigh_mod =  mTriggerGeometry . getModuleFromCellInConstruction( n.first ) -> moduleId();
+            unsigned neigh_mod =  getModuleFromCellInConstruction(mTriggerGeometry, n.first ) -> moduleId();
             //- remove the cells that are in the trigger cell
             if (neigh_mod == tmod.first) continue; // I am what I am and what I am needs no excuses
             //- add them to the list of neighbours
-            tmod . second  -> neighbours_ . insert (  neigh_mod ) ; // use n.second if you want directions TODO
+            //tmod . second  -> neighbours_ . insert (  neigh_mod ) ; // use n.second if you want directions TODO
+	    insertNeighbour( tmod . second.get(), neigh_mod );
         }
     } // tcell loop
 

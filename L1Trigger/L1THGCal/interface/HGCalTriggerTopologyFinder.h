@@ -39,14 +39,35 @@ namespace HGCalTriggerGeometry{
     // base class for a geometry modifier
     class HGCalTriggerGeometryModifier{
         // * general class to be derived from for a geometry modifier, passed into the init
+        protected:
+            const HGCalGeometry & mGeometry;
+
+            // --- the trigger cell modifier base class is friend of TriggerCell and Module: access to their private members 
+            void insertNeighbour(TriggerCell* tc, unsigned tc_id)
+            {
+                tc->neighbours_ . insert( tc_id);
+            }
+            void insertNeighbour(Module* mod, unsigned mod_id)
+            {
+                mod -> neighbours_ . insert ( mod_id);
+            }
+            HGCalTriggerGeometryBase::module_construction_container & get_modules_inconstruction( HGCalTriggerGeometryBase &b) { return b.modules_inconstruction_ ;}
+            HGCalTriggerGeometryBase::trigger_cell_construction_container & get_triggercells_inconstruction( HGCalTriggerGeometryBase &b) { return b.triggercells_inconstruction_ ;}
+
+            // -- getTrigger ... In Construction
+            HGCalTriggerGeometry::TriggerCell* getTriggerCellFromCellInConstruction( HGCalTriggerGeometryBase &b, unsigned id) { return b . getTriggerCellFromCellInConstruction(id )  ;}
+            HGCalTriggerGeometry::Module* getModuleFromCellInConstruction(HGCalTriggerGeometryBase &b, unsigned id){ return b.getModuleFromCellInConstruction( id ) ;}
+
         public:
+            HGCalTriggerGeometryModifier( const HGCalGeometry &g): mGeometry(g) {} 
             virtual int initialize(HGCalTriggerGeometryBase &g )  =0;
+
     };
 
 
     class HGCalTriggerTopologyFinder : public HGCalTriggerGeometry::HGCalTriggerGeometryModifier {	
         // const HGCalTopology & mTopology; geometry knows about topology
-        const HGCalGeometry & mGeometry;
+        
 
         // fill tr cell neigh
         int initTriggerCells(HGCalTriggerGeometryBase &);
@@ -56,7 +77,7 @@ namespace HGCalTriggerGeometry{
 
         public:
 
-        HGCalTriggerTopologyFinder( const HGCalGeometry &g): mGeometry(g) {} 
+        HGCalTriggerTopologyFinder( const HGCalGeometry &g): HGCalTriggerGeometryModifier(g) {} 
 
         // this is const 
         inline int initialize(HGCalTriggerGeometryBase &g ) 
