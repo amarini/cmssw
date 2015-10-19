@@ -80,6 +80,19 @@ HGCalTriggerGeometry::Module* HGCalTriggerGeometryBase::getModuleFromCellInConst
 void HGCalTriggerGeometryBase::finalizeInitialization(){ 
         // --- make maps const. destroy non const maps
         // these pointeres are released from the inconstruction and cost cast to be placed in the final geometry
+	
+	// check if modules_ and trigger_cells_ are empty
+	if (not modules_ . empty() )
+	{
+		edm::LogWarning("HGCalTriggerGeometryBase") <<
+			" modules map is not empty in finalization of the geometry modifiers. ";
+	}
+	if (not trigger_cells_ . empty() )
+	{
+		edm::LogWarning("HGCalTriggerGeometryBase") <<
+			" trigger cells map is not empty in finalization of the geometry modifiers";
+	}
+	//---      
         for( auto& p : modules_inconstruction_) 
             modules_ . insert( std::make_pair(p.first, std::unique_ptr<const HGCalTriggerGeometry::Module >(p.second.release()))) ;
         for(auto&p : triggercells_inconstruction_ ) 

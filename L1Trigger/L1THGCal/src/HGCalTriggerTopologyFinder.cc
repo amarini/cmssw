@@ -35,7 +35,13 @@ int HGCalTriggerGeometry::HGCalTriggerTopologyFinder::initTriggerCells(HGCalTrig
         {
             //- find the tr cells that corresponds to the neigh cells
             //unsigned neigh_tc =  mTriggerGeometry . getTriggerCellFromCellInConstruction( n.first ) -> triggerCellId();
-            unsigned neigh_tc =  getTriggerCellFromCellInConstruction(mTriggerGeometry, n.first ) -> triggerCellId();
+	    //
+	    TriggerCell *triggercell = getTriggerCellFromCellInConstruction(mTriggerGeometry, n.first ) ;
+	    if (triggercell == NULL) {
+	   		cms::Exception("HGCalTriggerTopologyFinder::initTriggerCells")<<
+				"Trigger Cell referenced but not present in the map";
+	    }
+            unsigned neigh_tc =  triggercell -> triggerCellId();
             //- remove the cells that are in the trigger cell
             if (neigh_tc == tcell.first) continue; // I am what I am and what I am needs no excuses
             //- add them to the list of neighbours
@@ -70,7 +76,12 @@ int HGCalTriggerGeometry::HGCalTriggerTopologyFinder::initTriggerModules(HGCalTr
         for (auto & n : neigh ) 
         {
             //- find the tr cells that corresponds to the neigh cells
-            unsigned neigh_mod =  getModuleFromCellInConstruction(mTriggerGeometry, n.first ) -> moduleId();
+	    Module *module = getModuleFromCellInConstruction(mTriggerGeometry, n.first );
+	    if ( module == NULL) {
+	    	cms::Exception("HGCalTriggerTopologyFinder::initTriggerModule")<<
+			"Trigger Module referenced but not present in the map";
+	    }
+            unsigned neigh_mod =  module -> moduleId();
             //- remove the cells that are in the trigger cell
             if (neigh_mod == tmod.first) continue; // I am what I am and what I am needs no excuses
             //- add them to the list of neighbours
