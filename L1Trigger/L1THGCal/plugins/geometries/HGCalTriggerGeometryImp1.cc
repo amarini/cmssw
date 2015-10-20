@@ -101,8 +101,8 @@ void HGCalTriggerGeometryImp1::initialize(const es_info& esInfo)
         const auto& tc2mItr = trigger_cells_to_modules_.find(triggercellId);
         unsigned moduleId = (tc2mItr!=trigger_cells_to_modules_.end() ? tc2mItr->second : 0); // 0 if the trigger cell doesn't belong to a module
         //unsigned moduleId = trigger_cells_to_modules_.at(triggercellId);
-        // FIXME: empty neighbours
-        std::unique_ptr<HGCalTriggerGeometry::TriggerCell> triggercellPtr(new HGCalTriggerGeometry::TriggerCell(triggercellId, moduleId, triggercellPoint, list_cells(), cellIds));
+        // FIXME: empty neighbours. will be filled by the geometry modifier
+        std::unique_ptr<HGCalTriggerGeometry::TriggerCell> triggercellPtr(new HGCalTriggerGeometry::TriggerCell(triggercellId, moduleId, triggercellPoint, HGCalTriggerGeometry::topo_list_type(), cellIds));
         triggercells_inconstruction_.insert( std::make_pair(triggercellId, std::move(triggercellPtr)) );
     }
     //
@@ -134,8 +134,8 @@ void HGCalTriggerGeometryImp1::initialize(const es_info& esInfo)
             moduleVector += trigger_cells_.at(triggercell)->position().basicVector();
         }
         GlobalPoint modulePoint( moduleVector/triggercellIds.size() );
-        // FIXME: empty neighbours
-        std::unique_ptr<HGCalTriggerGeometry::Module> modulePtr(new HGCalTriggerGeometry::Module(moduleId, modulePoint, list_triggercells(), triggercellIds, cellsInTriggerCells));
+        // FIXME: empty neighbours. Will be filled by the Geometry Modifier
+        std::unique_ptr<HGCalTriggerGeometry::Module> modulePtr(new HGCalTriggerGeometry::Module(moduleId, modulePoint, HGCalTriggerGeometry::topo_list_type(), triggercellIds, cellsInTriggerCells));
         modules_inconstruction_.insert( std::make_pair(moduleId, std::move(modulePtr)) );
     }
 

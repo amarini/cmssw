@@ -24,17 +24,6 @@
 
 namespace HGCalTriggerGeometry{
 
-    typedef uint8_t TopoBits;
-
-    enum TopoBit{
-        north   = 1UL <<0 ,
-        south   = 1UL <<1,
-        east    = 1UL <<2,
-        west    = 1UL <<3,
-        up      = 1UL <<4,
-        down    = 1UL <<5,
-        generic = 1UL <<6 // if nswe is not known, not guarrantee to be set if something else is
-    };
 
     // base class for a geometry modifier
     class HGCalTriggerGeometryModifier{
@@ -43,13 +32,13 @@ namespace HGCalTriggerGeometry{
             const HGCalGeometry & mGeometry;
 
             // --- the trigger cell modifier base class is friend of TriggerCell and Module: access to their private members 
-            void insertNeighbour(TriggerCell* tc, unsigned tc_id)
+            void insertNeighbour(TriggerCell* tc, unsigned tc_id, HGCalTriggerGeometry::TopoBits tb)
             {
-                tc->neighbours_ . insert( tc_id);
+                tc->neighbours_ . insert( std::make_pair(tc_id,tb));
             }
-            void insertNeighbour(Module* mod, unsigned mod_id)
+            void insertNeighbour(Module* mod, unsigned mod_id, HGCalTriggerGeometry::TopoBits tb)
             {
-                mod -> neighbours_ . insert ( mod_id);
+                mod -> neighbours_ . insert ( std::make_pair(mod_id,tb));
             }
             HGCalTriggerGeometryBase::module_construction_container & get_modules_inconstruction( HGCalTriggerGeometryBase &b) { return b.modules_inconstruction_ ;}
             HGCalTriggerGeometryBase::trigger_cell_construction_container & get_triggercells_inconstruction( HGCalTriggerGeometryBase &b) { return b.triggercells_inconstruction_ ;}

@@ -45,8 +45,8 @@ int HGCalTriggerGeometry::HGCalTriggerTopologyFinder::initTriggerCells(HGCalTrig
             //- remove the cells that are in the trigger cell
             if (neigh_tc == tcell.first) continue; // I am what I am and what I am needs no excuses
             //- add them to the list of neighbours
-            //tcell . second  -> neighbours_ . insert (  neigh_tc ) ; // use n.second if you want directions TODO
-	    insertNeighbour( tcell.second.get(), neigh_tc);
+            //tcell . second  -> neighbours_ . insert (  neigh_tc ) ; // use n.second if you want directions
+	    insertNeighbour( tcell.second.get(), neigh_tc, n.second);
         }
     } // tcell loop
 
@@ -68,8 +68,10 @@ int HGCalTriggerGeometry::HGCalTriggerTopologyFinder::initTriggerModules(HGCalTr
         {
             // I used these methods, so if we want to collect also this informations is simplier
 	    //                                                                  [ id ] remove const 
-            for (const unsigned & tcell_n : mTriggerGeometry . triggerCells() . find( tcell_id ) -> second -> neighbours()  ) // neihbours tr cells are filled
-                neigh[ tcell_n ] |=  HGCalTriggerGeometry::generic; // TODO -- north sud ovest west
+            for (const auto & tcell_n : mTriggerGeometry . triggerCells() . find( tcell_id ) -> second -> neighbours()  ) // neihbours tr cells are filled
+                neigh[ tcell_n.first ] |=  tcell_n.second; 
+	    	// auto is a topo_list_type
+                //neigh[ tcell_n ] |=  HGCalTriggerGeometry::generic; // TODO -- north sud ovest west
 
         } // components loop
         // ---
@@ -86,7 +88,7 @@ int HGCalTriggerGeometry::HGCalTriggerTopologyFinder::initTriggerModules(HGCalTr
             if (neigh_mod == tmod.first) continue; // I am what I am and what I am needs no excuses
             //- add them to the list of neighbours
             //tmod . second  -> neighbours_ . insert (  neigh_mod ) ; // use n.second if you want directions TODO
-	    insertNeighbour( tmod . second.get(), neigh_mod );
+	    insertNeighbour( tmod . second.get(), neigh_mod, n.second );
         }
     } // tcell loop
 

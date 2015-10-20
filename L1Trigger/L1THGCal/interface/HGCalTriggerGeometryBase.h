@@ -2,6 +2,7 @@
 #define __L1Trigger_L1THGCal_HGCalTriggerGeometryBase_h__
 
 #include <iostream>
+#include <functional>
 #include <unordered_set>
 #include <unordered_map>
 
@@ -42,6 +43,18 @@ class HGCalTriggerGeometryBase;
 namespace HGCalTriggerGeometry {
 
 
+    enum TopoBit{
+        north   = 1UL <<0 ,
+        south   = 1UL <<1,
+        east    = 1UL <<2,
+        west    = 1UL <<3,
+        up      = 1UL <<4,
+        down    = 1UL <<5,
+        generic = 1UL <<6 // if nswe is not known, not guarrantee to be set if something else is
+    };
+    // ---- topological pair
+    typedef uint8_t TopoBits;
+    typedef std::unordered_map< unsigned, TopoBits > topo_list_type;
 
     // fwd declaration
     class HGCalTriggerTopologyFinder;
@@ -54,7 +67,7 @@ namespace HGCalTriggerGeometry {
         typedef std::unordered_set<unsigned> list_type;
 
         TriggerCell(unsigned tc_id, unsigned mod_id, const GlobalPoint& pos,
-                const list_type& neighbs, const list_type& comps) :
+                const topo_list_type& neighbs, const list_type& comps) :
             trigger_cell_id_(tc_id),
             module_id_(mod_id),
             position_(pos),
@@ -73,14 +86,23 @@ namespace HGCalTriggerGeometry {
 
         const GlobalPoint& position() const { return position_; }
 
-        const std::unordered_set<unsigned>& neighbours() const { return neighbours_; }
+        const topo_list_type& neighbours() const { return neighbours_; }
         const std::unordered_set<unsigned>& components() const { return components_; }
+
+        // FIXME: cache
+        const list_type topoNeighbours(const TopoBits tb) const { list_type a; for(auto& x : neighbours_) if (x.second & tb) a.insert(x.first) ; return a;}
+        const list_type north() const { return topoNeighbours(HGCalTriggerGeometry::north) ; }
+        const list_type east() const { return topoNeighbours(HGCalTriggerGeometry::east) ; }
+        const list_type west() const { return topoNeighbours(HGCalTriggerGeometry::west) ; }
+        const list_type south() const { return topoNeighbours(HGCalTriggerGeometry::south) ; }
+        const list_type up() const { return topoNeighbours(HGCalTriggerGeometry::up) ; }
+        const list_type down() const { return topoNeighbours(HGCalTriggerGeometry::down) ; }
 
         private:
         unsigned trigger_cell_id_; // the ID of this trigger cell
         unsigned module_id_; // module this TC belongs to
         GlobalPoint position_;
-        list_type neighbours_; // neighbouring trigger cells
+        topo_list_type neighbours_; // neighbouring trigger cells
         list_type components_; // contained HGC cells
     };
 
@@ -91,7 +113,7 @@ namespace HGCalTriggerGeometry {
         typedef std::unordered_multimap<unsigned,unsigned> tc_map_type;
 
         Module(unsigned mod_id, const GlobalPoint& pos,
-                const list_type& neighbs, const list_type& comps,
+                const topo_list_type& neighbs, const list_type& comps,
                 const tc_map_type& tc_comps):
             module_id_(mod_id),
             position_(pos),
@@ -116,15 +138,24 @@ namespace HGCalTriggerGeometry {
 
         const GlobalPoint& position() const { return position_; }
 
-        const list_type& neighbours() const { return neighbours_; }
+        const topo_list_type& neighbours() const { return neighbours_; }
         const list_type& components() const { return components_; }
 
         const tc_map_type& triggerCellComponents() const { return tc_components_; }
 
+        //FIXME: cache
+        const list_type topoNeighbours(const TopoBits tb) const { list_type a; for(auto& x : neighbours_) if (x.second & tb) a.insert(x.first) ; return a;}
+        const list_type north() const { return topoNeighbours(HGCalTriggerGeometry::north) ; }
+        const list_type east() const { return topoNeighbours(HGCalTriggerGeometry::east) ; }
+        const list_type west() const { return topoNeighbours(HGCalTriggerGeometry::west) ; }
+        const list_type south() const { return topoNeighbours(HGCalTriggerGeometry::south) ; }
+        const list_type up() const { return topoNeighbours(HGCalTriggerGeometry::up) ; }
+        const list_type down() const { return topoNeighbours(HGCalTriggerGeometry::down) ; }
+
         private:    
         unsigned module_id_; // module this TC belongs to
         GlobalPoint position_;
-        list_type neighbours_; // neighbouring Modules
+        topo_list_type neighbours_; // neighbouring Modules
         list_type components_; // contained HGC trigger cells
         tc_map_type tc_components_; // cells contained by trigger cells
     };

@@ -102,6 +102,5 @@ void HGCalTriggerGeometryBase::finalizeInitialization(){
  } 
 
 
-
 EDM_REGISTER_PLUGINFACTORY(HGCalTriggerGeometryFactory,
 			   "HGCalTriggerGeometryFactory");
