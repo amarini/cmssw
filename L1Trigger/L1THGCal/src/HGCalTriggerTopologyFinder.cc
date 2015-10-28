@@ -94,3 +94,11 @@ int HGCalTriggerGeometry::HGCalTriggerTopologyFinder::initTriggerModules(HGCalTr
 
     return 0;
 }
+
+HGCalTriggerGeometry::HGCalTriggerGeometryModifier* HGCalTriggerGeometryModifierFactory::create(const std::string &name,  const HGCalGeometry &g) {
+                const auto& i = table_.find(name);
+                if ( i == table_.end() ) return (HGCalTriggerGeometryModifier*)NULL;
+                else return i -> second ->create(g);
+                };
+
+REGISTER(HGCalTriggerGeometry::HGCalTriggerTopologyFinder);

@@ -54,9 +54,54 @@ namespace HGCalTriggerGeometry{
     };
 
 
+    // ----------------------- FACTORY ------------------------
+    class Creator;
+
+    // this is a singleton
+    class HGCalTriggerGeometryModifierFactory{
+        private: 
+            //Singleton
+            HGCalTriggerGeometryModifierFactory(){};
+            HGCalTriggerGeometryModifierFactory(HGCalTriggerGeometryModifierFactory const&)  = delete;
+            void operator=(HGCalTriggerGeometryModifierFactory const&)  = delete;
+            //
+            std::map<std::string, HGCalTriggerGeometry::Creator*> table_;
+        public:
+            // singleton
+            static HGCalTriggerGeometryModifierFactory& get(){ static HGCalTriggerGeometryModifierFactory instance; return instance; }
+            //
+            HGCalTriggerGeometryModifier* create(const std::string &name,  const HGCalGeometry &g) ;
+            void inline registerit(const std::string& classname, Creator* creator){table_[classname] = creator;};
+    };
+
+    class Creator{
+        public:
+            virtual HGCalTriggerGeometryModifier* create(const HGCalGeometry &g)=0;
+            Creator(const std::string& classname) { HGCalTriggerGeometryModifierFactory::get() . registerit(classname,this) ; }
+    };
+    // creator
+    template <class T>
+        class CreatorImpl : public HGCalTriggerGeometry::Creator
+    {
+        public:
+            CreatorImpl(const std::string&classname) : Creator(classname){}
+            HGCalTriggerGeometryModifier* create( const HGCalGeometry &g) override final{ return new T(g); }
+    };
+
+/*
+#define REGISTER(classname) \
+    private: \
+             static const HGCalTriggerGeometry::CreatorImpl<classname> _creator_ ;
+             */
+#define REGISTER(classname)\
+    namespace { \
+    HGCalTriggerGeometry::CreatorImpl<classname> _creator_ (#classname); \
+    };
+
+    // ------------------------------------------------------
     class HGCalTriggerTopologyFinder : public HGCalTriggerGeometry::HGCalTriggerGeometryModifier {	
         // const HGCalTopology & mTopology; geometry knows about topology
-        
+
 
         // fill tr cell neigh
         int initTriggerCells(HGCalTriggerGeometryBase &);
@@ -75,7 +120,6 @@ namespace HGCalTriggerGeometry{
     };
 
 }; // namespace
-
 
 #endif
 

@@ -7,6 +7,14 @@
 #include <iostream>
 #include <fstream>
 
+#define DEBUG 1
+
+#ifdef DEBUG
+#include <iostream>
+using std::cout;
+using std::endl;
+#endif
+
 
 class HGCalTriggerGeometryImp1 : public HGCalTriggerGeometryBase
 {
@@ -72,8 +80,13 @@ void HGCalTriggerGeometryImp1::initialize(const es_info& esInfo)
             }
         }
     }
+
     if(!l1tCellsMappingStream.eof()) edm::LogWarning("HGCalTriggerGeometry") << "Error reading L1TCellsMapping'"<<layer<<" "<<cell<<" "<<triggercell<<" "<<subsector<<"' \n";
     l1tCellsMappingStream.close();
+
+#ifdef DEBUG
+    if(DEBUG>0) cout<<"-> CONSTRUCTED GEOMETRY BASE <-"<<endl;
+#endif
     //
     // Build trigger cells and fill map
     typedef HGCalTriggerGeometry::TriggerCell::list_type list_cells;
@@ -86,6 +99,9 @@ void HGCalTriggerGeometryImp1::initialize(const es_info& esInfo)
         trigger_cells_to_cells.insert( std::make_pair(triggercell, list_cells()) );
         trigger_cells_to_cells.at(triggercell).insert(cell);
     }
+#ifdef DEBUG
+    if(DEBUG>0) cout<<"-> CHECKPOINT A <-"<<endl;
+#endif
     for(const auto& triggercell_cells : trigger_cells_to_cells)
     {
         unsigned triggercellId = triggercell_cells.first;
@@ -105,6 +121,9 @@ void HGCalTriggerGeometryImp1::initialize(const es_info& esInfo)
         std::unique_ptr<HGCalTriggerGeometry::TriggerCell> triggercellPtr(new HGCalTriggerGeometry::TriggerCell(triggercellId, moduleId, triggercellPoint, HGCalTriggerGeometry::topo_list_type(), cellIds));
         triggercells_inconstruction_.insert( std::make_pair(triggercellId, std::move(triggercellPtr)) );
     }
+#ifdef DEBUG
+    if(DEBUG>0) cout<<"-> CHECKPOINT B <-"<<endl;
+#endif
     //
     // Build modules and fill map
     typedef HGCalTriggerGeometry::Module::list_type list_triggercells;
@@ -118,6 +137,10 @@ void HGCalTriggerGeometryImp1::initialize(const es_info& esInfo)
         modules_to_trigger_cells.insert( std::make_pair(module, list_triggercells()) );
         modules_to_trigger_cells.at(module).insert(triggercell);
     }
+#ifdef DEBUG
+    if(DEBUG>0) cout<<"-> CHECKPOINT C <-"<<endl;
+#endif
+    //
     for(const auto& module_triggercell : modules_to_trigger_cells)
     {
         unsigned moduleId = module_triggercell.first;
@@ -131,7 +154,7 @@ void HGCalTriggerGeometryImp1::initialize(const es_info& esInfo)
             for( const unsigned cell : cells_in_tc ) {
               cellsInTriggerCells.emplace(triggercell,cell);
             }
-            moduleVector += trigger_cells_.at(triggercell)->position().basicVector();
+            moduleVector += triggercells_inconstruction_.at(triggercell)->position().basicVector();
         }
         GlobalPoint modulePoint( moduleVector/triggercellIds.size() );
         // FIXME: empty neighbours. Will be filled by the Geometry Modifier
@@ -139,6 +162,9 @@ void HGCalTriggerGeometryImp1::initialize(const es_info& esInfo)
         modules_inconstruction_.insert( std::make_pair(moduleId, std::move(modulePtr)) );
     }
 
+#ifdef DEBUG
+    if(DEBUG>0) cout<<"-> CHECKPOINT D <-"<<endl;
+#endif
     // --- call the modifiers
 	initModifiers();
     // --- froze the geometry in the const structures
