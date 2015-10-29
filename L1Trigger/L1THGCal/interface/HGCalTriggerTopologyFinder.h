@@ -71,13 +71,16 @@ namespace HGCalTriggerGeometry{
             static HGCalTriggerGeometryModifierFactory& get(){ static HGCalTriggerGeometryModifierFactory instance; return instance; }
             //
             HGCalTriggerGeometryModifier* create(const std::string &name,  const HGCalGeometry &g) ;
-            void inline registerit(const std::string& classname, Creator* creator){table_[classname] = creator;};
+            void inline registerit(const std::string& classname, Creator* creator){
+                std::cout<<"[HGCalTriggerGeometryModifierFactory]"<<"::[INFO]"<<"Registering "<<classname<<std::endl;
+                table_[classname] = creator;
+            };
     };
 
     class Creator{
         public:
             virtual HGCalTriggerGeometryModifier* create(const HGCalGeometry &g)=0;
-            Creator(const std::string& classname) { HGCalTriggerGeometryModifierFactory::get() . registerit(classname,this) ; }
+            Creator(const std::string& classname) { std::cout<<" called creator const for"<<classname<<std::endl; HGCalTriggerGeometryModifierFactory::get() . registerit(classname,this) ; }
     };
     // creator
     template <class T>
