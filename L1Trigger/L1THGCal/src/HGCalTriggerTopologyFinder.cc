@@ -36,49 +36,16 @@ int HGCalTriggerGeometry::HGCalTriggerTopologyFinder::initTriggerCells(HGCalTrig
         for (auto & n : neigh ) 
         {
             //- find the tr cells that corresponds to the neigh cells
-            //unsigned neigh_tc =  mTriggerGeometry . getTriggerCellFromCellInConstruction( n.first ) -> triggerCellId();
-	    //
 
 	    TriggerCell *triggercell = getTriggerCellFromCellInConstruction(mTriggerGeometry, n.first ) ;
-	    if (triggercell == NULL) {
-		        std::stringstream compstream("");
-		 	for(auto & cell : tcell.second -> components()  ) 
-			{
-				compstream << cell<<": " ; // I need to reapet because I want the neigh per HGCal Cell for debug
-				for(auto & nb_id :  mTopology . north( cell) )
-					compstream <<"N "<< unsigned(nb_id )<<"|";
-				for(auto & nb_id :  mTopology . south( cell)  )
-					compstream <<"S " << unsigned(nb_id) <<"|";
-				for(auto & nb_id :  mTopology . east( cell) )
-					compstream <<"E " << unsigned(nb_id) <<"|";
-				for(auto & nb_id :  mTopology . west( cell) )
-					compstream <<"W " << unsigned(nb_id) <<"|";
-				for(auto & nb_id :  mTopology . up( cell) )
-					compstream <<"U " << unsigned(nb_id) <<"|";
-				for(auto & nb_id :  mTopology . down( cell) )
-					compstream <<"D " << unsigned(nb_id) <<"|";
-				compstream <<"\n";
-			}
-
-	   		// throw cms::Exception("HGCalTriggerTopologyFinder::initTriggerCells")
-			// 	<<"HGCal Cell ID="<<n.first <<" referenced in trigger cell (id="<< tcell.first<<")  components:"
-			// 	<< compstream.str() 
-			// 	<<", but not present in the map";
-
-			//std::cout 	<<"HGCal Cell ID="<<n.first <<" referenced in trigger cell (id="<< tcell.first<<")  components:"
-			//	<< compstream.str() 
-			//	<<", but not present in the map"
-			//	<<std::endl;
-			//continue;
-	    }
-	
+			
+	    // when the navigation in the underlaying geometry should give only existing and valid cells, throw an exceptions, instead of ignoring
 	    if (triggercell == NULL) continue;
 
             unsigned neigh_tc =  triggercell -> triggerCellId();
             //- remove the cells that are in the trigger cell
             if (neigh_tc == tcell.first) continue; // I am what I am and what I am needs no excuses
             //- add them to the list of neighbours
-            //tcell . second  -> neighbours_ . insert (  neigh_tc ) ; // use n.second if you want directions
 	    insertNeighbour( tcell.second.get(), neigh_tc, n.second);
         }
     } // tcell loop
@@ -103,11 +70,9 @@ int HGCalTriggerGeometry::HGCalTriggerTopologyFinder::initTriggerModules(HGCalTr
         {
             // I used these methods, so if we want to collect also this informations is simplier
 	    //                                                                  [ id ] remove const 
-            //for (const auto & tcell_n : mTriggerGeometry . triggerCells() . find( tcell_id ) -> second -> neighbours()  ) // neihbours tr cells are filled
             for (const auto & tcell_n : get_triggercells_inconstruction ( mTriggerGeometry) . find( tcell_id ) -> second -> neighbours()  ) // neihbours tr cells are filled
                 neigh[ tcell_n.first ] |=  tcell_n.second; 
 	    	// auto is a topo_list_type
-                //neigh[ tcell_n ] |=  HGCalTriggerGeometry::generic; // TODO -- north sud ovest west
 
         } // components loop
         // ---
@@ -129,7 +94,6 @@ int HGCalTriggerGeometry::HGCalTriggerTopologyFinder::initTriggerModules(HGCalTr
             //- remove the cells that are in the trigger cell
             if (neigh_mod == tmod.first) continue; // I am what I am and what I am needs no excuses
             //- add them to the list of neighbours
-            //tmod . second  -> neighbours_ . insert (  neigh_mod ) ; // use n.second if you want directions TODO
 	    insertNeighbour( tmod . second.get(), neigh_mod, n.second );
         }
     } // tcell loop
@@ -150,25 +114,3 @@ HGCalTriggerGeometry::HGCalTriggerGeometryModifier* HGCalTriggerGeometryModifier
 
 REGISTER(HGCalTriggerGeometry::HGCalTriggerTopologyFinder);
 
-/*
-int HGCalTriggerGeometry::HGCalTriggerGeometryCopy::initialize(HGCalTriggerGeometryBase &g){
-	// populate trigger cell
-    	short layer       = 0;
-    	short subsector   = 0;
-    	short cell        = 0;
-    	short module      = 0;
-    	short triggercell = 0;
-       HGCEEDetId detid(HGCEE, zside, layer, sector, subsector, cell); 
-       HGCTriggerDetId triggerDetid(HGCTrigger, zside, layer, sector, module, triggercell); 
-       const auto& ret = cells_to_trigger_cells_.insert( std::make_pair(detid, triggerDetid) );
-       trigger_cells_to_modules_.insert( std::make_pair(triggerDetid, moduleDetid) ); 
-       //
-        std::unique_ptr<HGCalTriggerGeometry::TriggerCell> triggercellPtr(new HGCalTriggerGeometry::TriggerCell(triggercellId, moduleId, triggercellPoint, HGCalTriggerGeometry::topo_list_type(), cellIds));
-        triggercells_inconstruction_.insert( std::make_pair(triggercellId, std::move(triggercellPtr)) );
-	
-        std::unique_ptr<HGCalTriggerGeometry::Module> modulePtr(new HGCalTriggerGeometry::Module(moduleId, modulePoint, HGCalTriggerGeometry::topo_list_type(), triggercellIds, cellsInTriggerCells));
-        modules_inconstruction_.insert( std::make_pair(moduleId, std::move(modulePtr)) );
-}
-
-REGISTER(HGCalTriggerGeometry::HGCalTriggerGeometryCopy);
-*/

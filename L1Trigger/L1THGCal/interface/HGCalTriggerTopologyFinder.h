@@ -92,11 +92,6 @@ namespace HGCalTriggerGeometry{
             HGCalTriggerGeometryModifier* create( const HGCalGeometry &g) override final{ return new T(g); }
     };
 
-/*
-#define REGISTER(classname) \
-    private: \
-             static const HGCalTriggerGeometry::CreatorImpl<classname> _creator_ ;
-             */
 #define REGISTER(classname)\
     namespace { \
     HGCalTriggerGeometry::CreatorImpl<classname> _creator_ (#classname); \
@@ -123,15 +118,6 @@ namespace HGCalTriggerGeometry{
 
     };
 
-    /*
-    class HGCalTriggerGeometryCopy : public HGCalTriggerGeometry::HGCalTriggerGeometryModifier
-    {
-        // copy trigger geometry from hgcal geometry 1->1
-        public: 
-        HGCalTriggerGeometryCopy( const HGCalGeometry &g): HGCalTriggerGeometryModifier(g) {} 
-        int initialize(HGCalTriggerGeometryBase &g ) override final;
-    };
-    */
 
 }; // namespace
 
