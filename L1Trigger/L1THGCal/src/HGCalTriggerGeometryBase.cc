@@ -70,8 +70,16 @@ HGCalTriggerGeometry::TriggerCell* HGCalTriggerGeometryBase::getTriggerCellFromC
 
 HGCalTriggerGeometry::Module* HGCalTriggerGeometryBase::getModuleFromCellInConstruction( const unsigned cell_det_id) { 
         auto found_tc = cells_to_trigger_cells_.find(cell_det_id) ; 
-        if (found_tc == cells_to_trigger_cells_.end() ) return (Module*)(NULL); 
-        auto found_mod = trigger_cells_to_modules_.find(found_tc->second);
+        if (found_tc == cells_to_trigger_cells_.end() )
+	{
+		return (Module*)(NULL); 
+	}
+	return getModuleFromTriggerCellInConstruction(found_tc->second);
+
+}
+
+HGCalTriggerGeometry::Module* HGCalTriggerGeometryBase::getModuleFromTriggerCellInConstruction( const unsigned trcell_det_id) {    
+        auto found_mod = trigger_cells_to_modules_.find( trcell_det_id);
         if(found_mod == trigger_cells_to_modules_.end() ) return (Module*)(NULL);
         return modules_inconstruction_ . find( found_mod->second) ->second.get();
     }

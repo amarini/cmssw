@@ -220,6 +220,7 @@ class HGCalTriggerGeometryBase {
     // the unique ptr do not loose ownership of these objects!
     HGCalTriggerGeometry::TriggerCell* getTriggerCellFromCellInConstruction( const unsigned cell_det_id); 
     HGCalTriggerGeometry::Module* getModuleFromCellInConstruction( const unsigned cell_det_id); 
+    HGCalTriggerGeometry::Module* getModuleFromTriggerCellInConstruction( const unsigned cell_det_id); 
 
     private:
     const std::string name_;

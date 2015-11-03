@@ -7,7 +7,7 @@
 #include <iostream>
 #include <fstream>
 
-#define DEBUG 1
+//#define DEBUG 1
 
 #ifdef DEBUG
 #include <iostream>
@@ -69,6 +69,7 @@ void HGCalTriggerGeometryImp1::initialize(const es_info& esInfo)
             for(unsigned sector=1; sector<=18; sector++)
             {
                 HGCEEDetId detid(HGCEE, zside, layer, sector, subsector, cell); 
+	
                 // 
                 // Fill cell -> trigger cell mapping
                 HGCTriggerDetId triggerDetid(HGCTrigger, zside, layer, sector, module, triggercell); 

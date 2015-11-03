@@ -46,6 +46,7 @@ namespace HGCalTriggerGeometry{
             // -- getTrigger ... In Construction
             HGCalTriggerGeometry::TriggerCell* getTriggerCellFromCellInConstruction( HGCalTriggerGeometryBase &b, unsigned id) { return b . getTriggerCellFromCellInConstruction(id )  ;}
             HGCalTriggerGeometry::Module* getModuleFromCellInConstruction(HGCalTriggerGeometryBase &b, unsigned id){ return b.getModuleFromCellInConstruction( id ) ;}
+            HGCalTriggerGeometry::Module* getModuleFromTriggerCellInConstruction(HGCalTriggerGeometryBase &b, unsigned id){ return b.getModuleFromTriggerCellInConstruction( id ) ;}
 
         public:
             HGCalTriggerGeometryModifier( const HGCalGeometry &g): mGeometry(g) {} 
@@ -121,6 +122,16 @@ namespace HGCalTriggerGeometry{
         { return initTriggerCells(g) | initTriggerModules(g) ; }
 
     };
+
+    /*
+    class HGCalTriggerGeometryCopy : public HGCalTriggerGeometry::HGCalTriggerGeometryModifier
+    {
+        // copy trigger geometry from hgcal geometry 1->1
+        public: 
+        HGCalTriggerGeometryCopy( const HGCalGeometry &g): HGCalTriggerGeometryModifier(g) {} 
+        int initialize(HGCalTriggerGeometryBase &g ) override final;
+    };
+    */
 
 }; // namespace
 
