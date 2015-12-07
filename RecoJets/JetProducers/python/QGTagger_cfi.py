@@ -22,5 +22,6 @@ QGTagger = cms.EDProducer('QGTagger',
   jetsLabel		= cms.string('QGL_AK4PFchs'),
   srcRho 		= cms.InputTag('fixedGridRhoFastjetAll'),		
   srcVertexCollection	= cms.InputTag('offlinePrimaryVerticesWithBS'),
-  useQualityCuts	= cms.bool(False)
+  useQualityCuts	= cms.bool(False),
+  usePuppi 		= cms.bool(False),
 )

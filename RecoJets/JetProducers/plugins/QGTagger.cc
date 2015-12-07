@@ -35,7 +35,8 @@ QGTagger::QGTagger(const edm::ParameterSet& iConfig) :
   systLabel(							iConfig.getParameter<std::string>("systematicsLabel")),
   useQC(							iConfig.getParameter<bool>("useQualityCuts")),
   useJetCorr(							!iConfig.getParameter<edm::InputTag>("jec").label().empty()),
-  produceSyst(							systLabel != "")
+  produceSyst(							systLabel != ""),
+  usePuppi(							iConfig.getParameter<bool>("usePuppi"))
 {
   produces<edm::ValueMap<float>>("qgLikelihood");
   produces<edm::ValueMap<float>>("axis2");
@@ -126,6 +127,7 @@ bool QGTagger::isPackedCandidate(const reco::Candidate* candidate){
     else if(typeid(reco::PFCandidate)==typeid(*candidate)) weAreUsingPackedCandidates = false;
     else throw cms::Exception("WrongJetCollection", "Jet constituents are not particle flow candidates");
     weStillNeedToCheckJetCandidates = false;
+    if (not weAreUsingPackedCandidates and usePuppi ) throw cms::Exception("NotImplemented","Puppi info from PF candidates not implemnted yet");
   }
   return weAreUsingPackedCandidates;
 }
@@ -138,18 +140,22 @@ std::tuple<int, float, float> QGTagger::calcVariables(const reco::Jet *jet, edm:
 
   //Loop over the jet constituents
   for(auto daughter : jet->getJetConstituentsQuick()){
+    double w=1.0; // per particle weight
+
     if(isPackedCandidate(daughter)){											//packed candidate situation
       auto part = static_cast<const pat::PackedCandidate*>(daughter);
+
+      if (usePuppi) w = part->puppiWeight(); // this are the one used for jets
 
       if(part->charge()){
         if(!(part->fromPV() > 1 && part->trackHighPurity())) continue;
         if(useQC){
           if((part->dz()*part->dz())/(part->dzError()*part->dzError()) > 25.) continue;
-          if((part->dxy()*part->dxy())/(part->dxyError()*part->dxyError()) < 25.) ++mult;
-        } else ++mult;
+          if((part->dxy()*part->dxy())/(part->dxyError()*part->dxyError()) < 25.) mult += w;
+        } else mult += w;
       } else {
         if(part->pt() < 1.0) continue;
-        ++mult;
+        mult += w;
       }
     } else {
       auto part = static_cast<const reco::PFCandidate*>(daughter);
@@ -180,7 +186,7 @@ std::tuple<int, float, float> QGTagger::calcVariables(const reco::Jet *jet, edm:
     float deta = daughter->eta() - jet->eta();
     float dphi = reco::deltaPhi(daughter->phi(), jet->phi());
     float partPt = daughter->pt();
-    float weight = partPt*partPt;
+    float weight = partPt*partPt *w;
 
     sum_weight += weight;
     sum_pt += partPt;
@@ -218,6 +224,7 @@ void QGTagger::fillDescriptions(edm::ConfigurationDescriptions& descriptions){
   desc.add<std::string>("jetsLabel");
   desc.add<std::string>("systematicsLabel", "");
   desc.add<bool>("useQualityCuts");
+  desc.add<bool>("usePuppi")->setComment("only for miniAOD for the moment.");
   desc.add<edm::InputTag>("jec", edm::InputTag())->setComment("Jet correction service: only applied when non-empty");
   desc.add<edm::InputTag>("srcVertexCollection")->setComment("Ignored for miniAOD, possible to keep empty");
   descriptions.add("QGTagger",  desc);
