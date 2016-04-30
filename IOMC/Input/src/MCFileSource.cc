@@ -31,10 +31,10 @@ MCFileSource::MCFileSource(const ParameterSet & pset, InputSourceDescription con
   if (fileName.find("file:") == 0){
     fileName.erase(0,5);
   }  
-  
+
   reader_->initialize(fileName);  
-  produces<HepMCProduct>();
-  produces<GenEventInfoProduct>();
+  produces<HepMCProduct>("generator");
+  produces<GenEventInfoProduct>("generator");
 }
 
 
@@ -56,10 +56,10 @@ void MCFileSource::produce(Event &e) {
 
   std::auto_ptr<HepMCProduct> bare_product(new HepMCProduct());  
   bare_product->addHepMCData(evt_);
-  e.put(bare_product);
+  e.put(bare_product,"generator");
 
   std::unique_ptr<GenEventInfoProduct> info ( new GenEventInfoProduct( evt_ ) );
-  e.put(std::move(info) );
+  e.put(std::move(info),"generator" );
 }
 
 }
