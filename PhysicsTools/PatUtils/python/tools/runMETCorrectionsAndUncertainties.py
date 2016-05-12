@@ -343,9 +343,12 @@ class RunMETCorrectionsAndUncertainties(ConfigToolBase):
  
         #compute the uncertainty on the MET
         patMetUncertaintySequence = cms.Sequence()
+        tmpUncSequence =cms.Sequence()
+        if not hasattr(process, "patMetUncertaintySequence"+postfix):
+            patMetUncertaintySequence=cms.Sequence(getattr(process, "ak4PFCHSL1FastL2L3CorrectorChain")+getattr(process, "ak4PFCHSL1FastL2L3ResidualCorrectorChain"))
         patShiftedModuleSequence = cms.Sequence()
         if computeUncertainties:
-            patMetUncertaintySequence,patShiftedModuleSequence =  self.getMETUncertainties(process, metType, metModName,
+            tmpUncSequence,patShiftedModuleSequence =  self.getMETUncertainties(process, metType, metModName,
                                                                   electronCollection,
                                                                   photonCollection,
                                                                   muonCollection,
@@ -358,11 +361,11 @@ class RunMETCorrectionsAndUncertainties(ConfigToolBase):
         if not hasattr(process, "patMetCorrectionSequence"+postfix):
             setattr(process, "patMetCorrectionSequence"+postfix, patMetCorrectionSequence)
         if not hasattr(process, "patMetUncertaintySequence"+postfix):
+            patMetUncertaintySequence += tmpUncSequence
             setattr(process, "patMetUncertaintySequence"+postfix, patMetUncertaintySequence)
         else:
-            #print "===============>> ", len(configtools.listModules(patMetUncertaintySequence))
-            if not len(configtools.listModules(patMetUncertaintySequence))==0:
-                setattr(process, metModName+"patMetUncertaintySequence"+postfix , patMetUncertaintySequence)
+            if not len(configtools.listModules(tmpUncSequence))==0:
+                setattr(process, metModName+"patMetUncertaintySequence"+postfix , tmpUncSequence)
                 tmpSeq = getattr(process, "patMetUncertaintySequence"+postfix)
                 tmpSeq += getattr(process, metModName+"patMetUncertaintySequence"+postfix)
                 
@@ -1224,7 +1227,7 @@ class RunMETCorrectionsAndUncertainties(ConfigToolBase):
             setattr(process,"met"+correctionLevel+postfix ,pfMet)
             patMetModuleSequence += getattr(process, "met"+correctionLevel+postfix)
    
-        if not hasattr(process, "genMetExtractor"+postfix):
+        if not hasattr(process, "genMetExtractor"+postfix) and not self._parameters["runOnData"].value:
             genMetExtractor = cms.EDProducer("GenMETExtractor",
                                              metSource= cms.InputTag("slimmedMETs",processName=cms.InputTag.skipCurrentProcess())
                                              )
