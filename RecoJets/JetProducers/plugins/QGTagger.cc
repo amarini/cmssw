@@ -15,6 +15,7 @@
 #include "DataFormats/PatCandidates/interface/PackedCandidate.h"
 #include "DataFormats/Common/interface/ValueMap.h"
 #include "DataFormats/Math/interface/deltaPhi.h"
+#include "DataFormats/Math/interface/deltaR.h"
 
 #include "RecoJets/JetProducers/interface/QGTagger.h"
 #include "RecoJets/JetAlgorithms/interface/QGLikelihoodCalculator.h"
@@ -39,8 +40,12 @@ QGTagger::QGTagger(const edm::ParameterSet& iConfig) :
 {
   produces<edm::ValueMap<float>>("qgLikelihood");
   produces<edm::ValueMap<float>>("axis2");
+  produces<edm::ValueMap<float>>("axis1");
   produces<edm::ValueMap<int>>("mult");
+  produces<edm::ValueMap<int>>("nmult");
+  produces<edm::ValueMap<int>>("cmult");
   produces<edm::ValueMap<float>>("ptD");
+  produces<edm::ValueMap<float>>("pt_dr_log");
   if(produceSyst){
     produces<edm::ValueMap<float>>("qgLikelihoodSmearedQuark");
     produces<edm::ValueMap<float>>("qgLikelihoodSmearedGluon");
@@ -55,8 +60,12 @@ QGTagger::QGTagger(const edm::ParameterSet& iConfig) :
 void QGTagger::produce(edm::Event& iEvent, const edm::EventSetup& iSetup){
   std::vector<float>* qgProduct 		= new std::vector<float>;
   std::vector<float>* axis2Product 		= new std::vector<float>;
+  std::vector<float>* axis1Product 		= new std::vector<float>;
   std::vector<int>*   multProduct 		= new std::vector<int>;
+  std::vector<int>*   nmultProduct 		= new std::vector<int>;
+  std::vector<int>*   cmultProduct 		= new std::vector<int>;
   std::vector<float>* ptDProduct 		= new std::vector<float>;
+  std::vector<float>* pt_dr_logProduct 		= new std::vector<float>;
   std::vector<float>* smearedQuarkProduct 	= new std::vector<float>;
   std::vector<float>* smearedGluonProduct 	= new std::vector<float>;
   std::vector<float>* smearedAllProduct 	= new std::vector<float>;
@@ -79,8 +88,8 @@ void QGTagger::produce(edm::Event& iEvent, const edm::EventSetup& iSetup){
   for(auto jet = jets->begin(); jet != jets->end(); ++jet){
     float pt = (useJetCorr ? jet->pt()*jetCorr->correction(*jet) : jet->pt());
 
-    float ptD, axis2; int mult;
-    std::tie(mult, ptD, axis2) = calcVariables(&*jet, vertexCollection);
+    float ptD, axis2,axis1, pt_dr_log; int mult,nmult,cmult;
+    std::tie(mult, nmult, cmult, ptD, axis2, axis1, pt_dr_log) = calcVariables(&*jet, vertexCollection);
 
     float qgValue;
     if(mult > 2) qgValue = qgLikelihood->computeQGLikelihood(QGLParamsColl, pt, jet->eta(), *rho, {(float) mult, ptD, -std::log(axis2)});
@@ -92,15 +101,23 @@ void QGTagger::produce(edm::Event& iEvent, const edm::EventSetup& iSetup){
       smearedGluonProduct->push_back(qgLikelihood->systematicSmearing(QGLSystColl, pt, jet->eta(), *rho, qgValue, 1));
       smearedAllProduct->push_back(qgLikelihood->systematicSmearing(  QGLSystColl, pt, jet->eta(), *rho, qgValue, 2));
     }
+    axis1Product->push_back(axis1);
     axis2Product->push_back(axis2);
     multProduct->push_back(mult);
+    nmultProduct->push_back(nmult);
+    cmultProduct->push_back(cmult);
     ptDProduct->push_back(ptD);
+    pt_dr_logProduct->push_back(pt_dr_log);
   }
 
   putInEvent("qgLikelihood", jets, qgProduct,    iEvent);
   putInEvent("axis2",        jets, axis2Product, iEvent);
+  putInEvent("axis1",        jets, axis1Product, iEvent);
   putInEvent("mult",         jets, multProduct,  iEvent);
+  putInEvent("nmult",        jets, nmultProduct, iEvent);
+  putInEvent("cmult",        jets, cmultProduct, iEvent);
   putInEvent("ptD",          jets, ptDProduct,   iEvent);
+  putInEvent("pt_dr_log",    jets, pt_dr_logProduct,iEvent);
   if(produceSyst){
     putInEvent("qgLikelihoodSmearedQuark", jets, smearedQuarkProduct, iEvent);
     putInEvent("qgLikelihoodSmearedGluon", jets, smearedGluonProduct, iEvent);
@@ -132,9 +149,10 @@ bool QGTagger::isPackedCandidate(const reco::Candidate* candidate){
 
 
 /// Calculation of axis2, mult and ptD
-std::tuple<int, float, float> QGTagger::calcVariables(const reco::Jet *jet, edm::Handle<reco::VertexCollection>& vC){
+std::tuple<int, int, int, float, float, float, float> QGTagger::calcVariables(const reco::Jet *jet, edm::Handle<reco::VertexCollection>& vC){
   float sum_weight = 0., sum_deta = 0., sum_dphi = 0., sum_deta2 = 0., sum_dphi2 = 0., sum_detadphi = 0., sum_pt = 0.;
-  int mult = 0;
+  int mult = 0, nmult = 0, cmult = 0;
+  float pt_dr_log = 0;
 
   //Loop over the jet constituents
   for(auto daughter : jet->getJetConstituentsQuick()){
@@ -145,12 +163,24 @@ std::tuple<int, float, float> QGTagger::calcVariables(const reco::Jet *jet, edm:
         if(!(part->fromPV() > 1 && part->trackHighPurity())) continue;
         if(useQC){
           if((part->dz()*part->dz())/(part->dzError()*part->dzError()) > 25.) continue;
-          if((part->dxy()*part->dxy())/(part->dxyError()*part->dxyError()) < 25.) ++mult;
-        } else ++mult;
+          if((part->dxy()*part->dxy())/(part->dxyError()*part->dxyError()) < 25.){
+	    ++mult;
+	    ++cmult;
+	  }
+	} else {
+	  ++mult;
+	  ++cmult;
+	}
       } else {
         if(part->pt() < 1.0) continue;
         ++mult;
+	++nmult;
       }
+
+      //Calculate pt_dr_log                                                                                                                                 
+      float dr = reco::deltaR(*jet, *part);
+      pt_dr_log += std::log(part->pt()/dr);
+
     } else {
       auto part = static_cast<const reco::PFCandidate*>(daughter);
 
@@ -169,12 +199,22 @@ std::tuple<int, float, float> QGTagger::calcVariables(const reco::Jet *jet, edm:
           float dz_sigma_square = pow(itrk->dzError(),2) + pow(vtxClose->zError(),2);
           float d0_sigma_square = pow(itrk->d0Error(),2) + pow(vtxClose->xError(),2) + pow(vtxClose->yError(),2);
           if(dz*dz/dz_sigma_square > 25.) continue;
-          if(d0*d0/d0_sigma_square < 25.) ++mult;
-        } else ++mult;
+          if(d0*d0/d0_sigma_square < 25.) {
+	    ++mult;
+	    ++cmult;
+	  }
+	} else{
+	  ++mult;
+	  ++cmult;
+	}
       } else {														//No track --> neutral particle
         if(part->pt() < 1.0) continue;											//Only use neutrals with pt > 1 GeV
         ++mult;
+	++nmult;
       }
+      //Calculate pt_dr_log                                                                                                                                 
+      float dr = reco::deltaR(*jet, *part);
+      pt_dr_log += std::log(part->pt()/dr);
     }
 
     float deta = daughter->eta() - jet->eta();
@@ -205,8 +245,9 @@ std::tuple<int, float, float> QGTagger::calcVariables(const reco::Jet *jet, edm:
   }
   float delta = sqrt(fabs((a-b)*(a-b)+4*c*c));
   float axis2 = (a+b-delta > 0 ?  sqrt(0.5*(a+b-delta)) : 0);
+  float axis1 = (a+b+delta > 0 ?  sqrt(0.5*(a+b+delta)) : 0);
   float ptD   = (sum_weight > 0 ? sqrt(sum_weight)/sum_pt : 0);
-  return std::make_tuple(mult, ptD, axis2);
+  return std::make_tuple(mult, nmult, cmult,  ptD, axis2, axis1, pt_dr_log);
 }
 
 
