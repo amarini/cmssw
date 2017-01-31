@@ -45,7 +45,7 @@ QGTagger::QGTagger(const edm::ParameterSet& iConfig) :
   produces<edm::ValueMap<int>>("nmult");
   produces<edm::ValueMap<int>>("cmult");
   produces<edm::ValueMap<float>>("ptD");
-  produces<edm::ValueMap<float>>("pt_dr_log");
+  produces<edm::ValueMap<float>>("ptDrLog");
   if(produceSyst){
     produces<edm::ValueMap<float>>("qgLikelihoodSmearedQuark");
     produces<edm::ValueMap<float>>("qgLikelihoodSmearedGluon");
@@ -117,7 +117,7 @@ void QGTagger::produce(edm::Event& iEvent, const edm::EventSetup& iSetup){
   putInEvent("nmult",        jets, nmultProduct, iEvent);
   putInEvent("cmult",        jets, cmultProduct, iEvent);
   putInEvent("ptD",          jets, ptDProduct,   iEvent);
-  putInEvent("pt_dr_log",    jets, pt_dr_logProduct,iEvent);
+  putInEvent("ptDrLog",    jets, pt_dr_logProduct,iEvent);
   if(produceSyst){
     putInEvent("qgLikelihoodSmearedQuark", jets, smearedQuarkProduct, iEvent);
     putInEvent("qgLikelihoodSmearedGluon", jets, smearedGluonProduct, iEvent);
