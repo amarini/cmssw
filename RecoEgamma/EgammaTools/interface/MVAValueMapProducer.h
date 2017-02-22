@@ -17,6 +17,8 @@
 
 #include <memory>
 #include <vector>
+#include <stdexcept>
+#include <iostream>
 
 template <class ParticleType> 
 class MVAValueMapProducer : public edm::stream::EDProducer< edm::GlobalCache<egamma::MVAObjectCache> > {
@@ -135,8 +137,20 @@ void MVAValueMapProducer<ParticleType>::produce(edm::Event& iEvent, const edm::E
     // Loop over particles
     for (size_t i = 0; i < src->size(); ++i){
       auto iCand = src->ptrAt(i);      
-      mvaValues.push_back( thisEstimator->mvaValue( iCand, iEvent ) );
-      mvaCategories.push_back( thisEstimator->findCategory( iCand ) );
+      double value=-999.;
+      int cat=-1;
+      try{
+	      value=thisEstimator->mvaValue( iCand, iEvent );
+	      cat=thisEstimator->findCategory( iCand ) ;
+      }
+      catch (std::exception e)
+      {
+	      // this may happens if rechits are not in miniAOD, and due to calibration/regression ... energy changes
+	      edm::LogWarning("MVAValueMapProducer")<<"caught exception:"<<e.what()<<"\n\tI'll set this value to -999 and ignore this object";
+      }
+	
+      mvaValues.push_back( value );
+      mvaCategories.push_back( cat );
     } // end loop over particles
 
     writeValueMap(iEvent, src, mvaValues, mvaValueMapNames_[iEstimator] );  
