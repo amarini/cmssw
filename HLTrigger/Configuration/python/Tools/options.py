@@ -4,8 +4,6 @@ globalTag = {
   'Fake1': 'auto:run2_mc_Fake1',
   'FULL' : 'auto:run2_mc_FULL',
   'GRun' : 'auto:run2_mc_GRun',       # used as default
-  '25ns10e33_v2' : 'auto:run2_mc_25ns10e33_v2',
-  '25ns15e33_v4' : 'auto:run2_mc_25ns15e33_v4',
   'HIon' : 'auto:run2_mc_HIon',
   'PIon' : 'auto:run2_mc_PIon',
   'PRef' : 'auto:run2_mc_PRef',
@@ -117,6 +115,8 @@ class HLTProcessOptions(object):
     self.emulator   = None        # (*) if set, run (part of) the L1 emulator instead of taking the L1 results from the data
     self.prescale   = None        # (*) if set, force the use of a specific prescale column. If set to "none", unprescale all paths
     self.open       = False       #     if set, cms.ignore all filters, making all paths run on and accept all events
+    self.eras       = None        #     if set, select the defined Eras into the HLT configuration
+    self.customise  = None        #     if set, apply the user-defined customization functions using the format HLTrigger/Configuration/customizeHLTTrackingForPhaseI2017.customizeHLTForPFTrackingPhaseI2017
     self.errortype  = False       #     if set, change all HLTTriggerTypeFilter EDFilters to accept only error events (SelectedTriggerType = 0)
     self.profiling  = False       #     if set, instrument the menu for profiling measurements
     self.timing     = False       #     if set, instrument the menu for timing measurements (implies profiling)
@@ -127,6 +127,7 @@ class HLTProcessOptions(object):
     self.output     = 'all'       # (*) output 'all', 'minimal' or 'none' output modules
     self.fragment   = False       #     prepare a configuration fragment (true) or a whole process (false)
     self.hilton     = False       #     prepare a configuration for running with hilton-like modules
+    self.setup      = None        #     if set, downlad the setup_cff from the specified configuration and load it.
 
 
   # convert HLT and L1 menus to a dedicated object representation on the fly

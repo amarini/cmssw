@@ -79,8 +79,15 @@ class MillePedeAlignmentAlgorithm : public AlignmentAlgorithmBase
 
   /// Returns whether MP should process events in the current configuration
   virtual bool processesEvents() override;
+
+  /// Returns whether MP produced results to be stored
+  virtual bool storeAlignments() override;
+
   /// Run the algorithm on trajectories and tracks
   virtual void run(const edm::EventSetup &setup, const EventInfo &eventInfo) override;
+
+  /// called at begin of run
+  virtual void beginRun(const edm::Run& run, const edm::EventSetup& setup) override;
 
   // TODO: This method does NOT match endRun() in base class! Nobody is
   //       calling this?
@@ -246,13 +253,15 @@ class MillePedeAlignmentAlgorithm : public AlignmentAlgorithmBase
   std::unique_ptr<AlignableNavigator>    theAlignableNavigator;
   std::unique_ptr<MillePedeMonitor>      theMonitor;
   std::unique_ptr<Mille>                 theMille;
-  std::unique_ptr<PedeLabelerBase>       thePedeLabels;
+  std::shared_ptr<PedeLabelerBase>       thePedeLabels;
   std::unique_ptr<PedeSteerer>           thePedeSteer;
   std::unique_ptr<TrajectoryFactoryBase> theTrajectoryFactory;
   std::vector<IntegratedCalibrationBase*> theCalibrations;
   unsigned int              theMinNumHits;
   double                    theMaximalCor2D; /// maximal correlation allowed for 2D hit in TID/TEC.
                                              /// If larger, the 2D measurement gets diagonalized!!!
+  const AlignmentAlgorithmBase::RunNumber firstIOV_;
+  const bool ignoreFirstIOVCheck_;
   int                       theLastWrittenIov; // keeping track for output trees...
   std::vector<float>        theFloatBufferX;
   std::vector<float>        theFloatBufferY;

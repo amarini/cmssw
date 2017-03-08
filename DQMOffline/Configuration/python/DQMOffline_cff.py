@@ -46,9 +46,12 @@ from DQM.Physics.DQMPhysics_cff import *
 from DQM.Physics.DQMTopMiniAOD_cff import *
 from Validation.RecoTau.DQMSequences_cfi import *
 from DQM.TrackingMonitorSource.TrackingSourceConfig_Tier0_cff import *
+from DQM.Phase2OuterTracker.OuterTrackerSourceConfig_cff import *
 # miniAOD DQM validation
 from Validation.RecoParticleFlow.miniAODDQM_cff import *
 from DQM.TrackingMonitor.tracksDQMMiniAOD_cff import * 
+from DQM.TrackingMonitor.trackingRecoMaterialAnalyzer_cfi import materialDumperAnalyzer
+materialDumperAnalyzer.usePV = True
 
 DQMOfflinePrePOG = cms.Sequence( TrackingDQMSourceTier0 *
                                  muonMonitors *
@@ -56,6 +59,7 @@ DQMOfflinePrePOG = cms.Sequence( TrackingDQMSourceTier0 *
                                  egammaDQMOffline *
                                  triggerOfflineDQMSource *
                                  pvMonitor *
+                                 materialDumperAnalyzer *
                                  bTagPlotsDATA *
                                  alcaBeamMonitor *
                                  dqmPhysics *
@@ -96,17 +100,30 @@ DQMOfflinePOGMC = cms.Sequence( DQMOfflinePrePOGMC *
 DQMOfflinePhysics = cms.Sequence( dqmPhysics )
 
 
+
+DQMOfflineTracking = cms.Sequence( TrackingDQMSourceTier0Common *
+                                   pvMonitor *
+                                   materialDumperAnalyzer
+                                 )
+
+DQMOuterTracker = cms.Sequence( dqmDcsInfo *
+                                OuterTrackerSource *
+                                DQMMessageLogger *
+                                dqmPhysics *
+                                pvMonitor *
+                                produceDenoms
+                                )
+
 DQMOfflineCommon = cms.Sequence( dqmDcsInfo *
                                  DQMMessageLogger *
                                  SiStripDQMTier0Common *
-                                 TrackingDQMSourceTier0Common *
                                  siPixelOfflineDQM_source *
+                                 DQMOfflineTracking *
                                  l1TriggerDqmOffline *
                                  triggerOfflineDQMSource *
                                  alcaBeamMonitor *
                                  castorSources *
                                  dqmPhysics *
-                                 pvMonitor *
                                  produceDenoms *
                                  pfTauRunDQMValidation 
                                 )
@@ -121,12 +138,11 @@ DQMOfflineCommonSiStripZeroBias = cms.Sequence( dqmDcsInfo *
                                  castorSources *
                                  dqmPhysics *
                                  pvMonitor *
+                                 materialDumperAnalyzer *
                                  produceDenoms *
                                  pfTauRunDQMValidation 
                                  )
-DQMOfflineTracking = cms.Sequence( TrackingDQMSourceTier0Common *
-                                   pvMonitor
-                                 )
+
 DQMOfflineMuon = cms.Sequence( dtSources *
                                rpcTier0Source *
                                cscSources *

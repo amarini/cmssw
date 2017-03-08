@@ -12,10 +12,12 @@
 
 #include "FWCore/Framework/interface/ESHandle.h"
 #include "FWCore/Framework/interface/EventSetup.h"
+#include "FWCore/Framework/interface/Run.h"
 #include "FWCore/MessageLogger/interface/MessageLogger.h"
 
 #include "TrackingTools/PatternTools/interface/Trajectory.h"
 
+#include "Alignment/MillePedeAlignmentAlgorithm/interface/MillePedeFileReader.h"
 #include "Alignment/MillePedeAlignmentAlgorithm/interface/MillePedeMonitor.h"
 #include "Alignment/MillePedeAlignmentAlgorithm/interface/MillePedeVariables.h"
 #include "Alignment/MillePedeAlignmentAlgorithm/interface/MillePedeVariablesIORoot.h"
@@ -94,6 +96,8 @@ MillePedeAlignmentAlgorithm::MillePedeAlignmentAlgorithm(const edm::ParameterSet
   theAlignables(),
   theMinNumHits(cfg.getParameter<unsigned int>("minNumHits")),
   theMaximalCor2D(cfg.getParameter<double>("max2Dcorrelation")),
+  firstIOV_(cfg.getUntrackedParameter<AlignmentAlgorithmBase::RunNumber>("firstIOV")),
+  ignoreFirstIOVCheck_(cfg.getUntrackedParameter<bool>("ignoreFirstIOVCheck")),
   theLastWrittenIov(0),
   theGblDoubleBinary(cfg.getParameter<bool>("doubleBinary")),
   runAtPCL_(cfg.getParameter<bool>("runAtPCL")),
@@ -212,10 +216,10 @@ void MillePedeAlignmentAlgorithm::initialize(const edm::EventSetup &setup,
   edm::LogInfo("Alignment") << "@SUB=MillePedeAlignmentAlgorithm::initialize"
 			    << "Using plugin '" << labelerPlugin << "' to generate labels.";
   
-  thePedeLabels = std::unique_ptr<PedeLabelerBase>(PedeLabelerPluginFactory::get()
-						   ->create(labelerPlugin,
-							    PedeLabelerBase::TopLevelAlignables(tracker, muon, extras),
-							    pedeLabelerCfg));
+  thePedeLabels = std::shared_ptr<PedeLabelerBase>(PedeLabelerPluginFactory::get()
+                                                   ->create(labelerPlugin,
+                                                            PedeLabelerBase::TopLevelAlignables(tracker, muon, extras),
+                                                            pedeLabelerCfg));
   
   // 1) Create PedeSteerer: correct alignable positions for coordinate system selection
   edm::ParameterSet pedeSteerCfg(theConfig.getParameter<edm::ParameterSet>("pedeSteerer"));
@@ -300,6 +304,23 @@ bool MillePedeAlignmentAlgorithm::processesEvents()
 {
   if (isMode(myMilleBit)) {
     return true;
+  } else {
+    return false;
+  }
+}
+
+//_____________________________________________________________________________
+bool MillePedeAlignmentAlgorithm::storeAlignments()
+{
+  if (isMode(myPedeRunBit)) {
+    if (runAtPCL_) {
+      MillePedeFileReader mpReader(theConfig.getParameter<edm::ParameterSet>("MillePedeFileReader"),
+                                   thePedeLabels);
+      mpReader.read();
+      return mpReader.storeAlignments();
+    } else {
+      return true;
+    }
   } else {
     return false;
   }
@@ -562,6 +583,17 @@ MillePedeAlignmentAlgorithm::addHitCount(const std::vector<AlignmentParameters*>
   }
   
   return nHitY;
+}
+
+
+void MillePedeAlignmentAlgorithm::beginRun(const edm::Run& run,
+                                           const edm::EventSetup& setup) {
+  if (run.run() < firstIOV_ && !ignoreFirstIOVCheck_) {
+    throw cms::Exception("Alignment")
+      << "@SUB=MillePedeAlignmentAlgorithm::beginRun\n"
+      << "Using data (run = " << run.run()
+      << ") prior to the first defined IOV (" << firstIOV_ << ").";
+  }
 }
 
 //____________________________________________________

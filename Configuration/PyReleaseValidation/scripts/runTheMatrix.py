@@ -51,6 +51,7 @@ if __name__ == '__main__':
                      8, #BH/Cosmic MC
                      25, #MC ttbar
                      4.22, #cosmic data
+                     4.53, #run1 data + miniAOD
                      1000, #data+prompt
                      1001, #data+express
                      136.731, #2016B Photon data
@@ -59,6 +60,7 @@ if __name__ == '__main__':
                      135.4, #Run 2 Zee ttbar
                      10021.0, #2017 tenmu
                      10024.0, #2017 ttbar
+                     10824.0, #2018 ttbar
                      20034.0, #2023D7 ttbar (Run2 calo)
                      23234.0, #2023D8 ttbar (HGCal + timing)
                      21234.0, #2024D4 ttbar (TDR baseline Tracker)
