@@ -53,6 +53,9 @@ public:
   void combine(GenLumiInfoProduct::XSec&, double&, const GenLumiInfoProduct::XSec&, const double&);
   void combine(double&, double&, double&, const double&, const double&, const double &);
   
+  const GenLumiInfoProduct::XSec XSec(){ return xsec_;}
+  const GenLumiInfoProduct::XSec XSecPreFilter(){ return xsecPreFilter_;}
+  
 private:
 
   edm::EDGetTokenT<GenFilterInfo> genFilterInfoToken_;
