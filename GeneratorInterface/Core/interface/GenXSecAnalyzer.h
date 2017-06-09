@@ -39,8 +39,6 @@ public:
   ~GenXSecAnalyzer();
   const double final_xsec_value() const {return xsec_.value();}
   const double final_xsec_error() const {return xsec_.error();}
-  
-private:
 
   virtual void beginJob() override;
   virtual void beginRun(edm::Run const&, edm::EventSetup const&) override;
@@ -54,6 +52,8 @@ private:
   // combination of cross section from different MCs after matching (could be either before or after HepcFilter and GenFilter)
   void combine(GenLumiInfoProduct::XSec&, double&, const GenLumiInfoProduct::XSec&, const double&);
   void combine(double&, double&, double&, const double&, const double&, const double &);
+  
+private:
 
   edm::EDGetTokenT<GenFilterInfo> genFilterInfoToken_;
   edm::EDGetTokenT<GenFilterInfo> hepMCFilterInfoToken_;
