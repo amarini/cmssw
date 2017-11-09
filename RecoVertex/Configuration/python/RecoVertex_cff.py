@@ -37,7 +37,7 @@ from RecoVertex.PrimaryVertexProducer.TkClusParameters_cff import DA2D_vectParam
 DA2D_vectParameters.TkDAClusParameters.verbose = cms.untracked.bool(False)
 unsortedOfflinePrimaryVertices4D = unsortedOfflinePrimaryVertices.clone( verbose = cms.untracked.bool(False),
                                                                          TkClusParameters = DA2D_vectParameters )
-unsortedOfflinePrimaryVertices4D.TkFilterParameters.minPt = cms.double(0.7)
+unsortedOfflinePrimaryVertices4D.TkFilterParameters.minPt = cms.double(0.0)
 unsortedOfflinePrimaryVertices4D.TrackTimesLabel = cms.InputTag("trackTimeValueMapProducer:generalTracksConfigurableFlatResolutionModel")
 unsortedOfflinePrimaryVertices4D.TrackTimeResosLabel = cms.InputTag("trackTimeValueMapProducer:generalTracksConfigurableFlatResolutionModelResolution")
 offlinePrimaryVertices4D=sortedPrimaryVertices.clone(vertices="unsortedOfflinePrimaryVertices4D", particles="trackRefsForJetsBeforeSorting4D", trackTimeTag=cms.InputTag("trackTimeValueMapProducer","generalTracksConfigurableFlatResolutionModel"),trackTimeResoTag=cms.InputTag("trackTimeValueMapProducer","generalTracksConfigurableFlatResolutionModelResolution"),assignment=dict(useTiming=True))
@@ -48,20 +48,68 @@ trackWithVertexRefSelectorBeforeSorting4D.ptMax=9e99
 trackWithVertexRefSelectorBeforeSorting4D.ptErrorCut=9e99
 trackRefsForJetsBeforeSorting4D = trackRefsForJets.clone(src="trackWithVertexRefSelectorBeforeSorting4D")
 
+unsortedOfflinePrimaryVertices1D=unsortedOfflinePrimaryVertices.clone()
+offlinePrimaryVertices1D=sortedPrimaryVertices.clone(vertices="unsortedOfflinePrimaryVertices1D", particles="trackRefsForJetsBeforeSorting1D")
+offlinePrimaryVertices1DWithBS=sortedPrimaryVertices.clone(vertices=cms.InputTag("unsortedOfflinePrimaryVertices1D","WithBS"), particles="trackRefsForJetsBeforeSorting1D")
+trackWithVertexRefSelectorBeforeSorting1D = trackWithVertexRefSelector.clone(vertexTag="unsortedOfflinePrimaryVertices1D")
+trackWithVertexRefSelectorBeforeSorting1D.ptMax=9e99
+trackWithVertexRefSelectorBeforeSorting1D.ptErrorCut=9e99
+trackRefsForJetsBeforeSorting1D = trackRefsForJets.clone(src="trackWithVertexRefSelectorBeforeSorting1D")
+
+
 from SimTracker.TrackerHitAssociation.tpClusterProducer_cfi import tpClusterProducer
 from SimTracker.TrackAssociatorProducers.quickTrackAssociatorByHits_cfi import quickTrackAssociatorByHits
 from SimTracker.TrackAssociation.trackTimeValueMapProducer_cfi import trackTimeValueMapProducer
+
+tktimeassoc = cms.Sequence(tpClusterProducer *
+                           quickTrackAssociatorByHits *
+                           trackTimeValueMapProducer
+                           )
+
+vertexreco4d = cms.Sequence(unsortedOfflinePrimaryVertices4D *
+                                trackWithVertexRefSelectorBeforeSorting4D *
+                                trackRefsForJetsBeforeSorting4D *
+                                offlinePrimaryVertices4D *
+                                offlinePrimaryVertices4DWithBS
+                                )
+
+vertexreco1d = cms.Sequence(unsortedOfflinePrimaryVertices1D *
+                                trackWithVertexRefSelectorBeforeSorting1D *
+                                trackRefsForJetsBeforeSorting1D *
+                                offlinePrimaryVertices1D *
+                                offlinePrimaryVertices1DWithBS
+                                )
+
 _phase2_tktiming_vertexreco = cms.Sequence( vertexreco.copy() *
-                                            tpClusterProducer *
-                                            quickTrackAssociatorByHits *
-                                            trackTimeValueMapProducer *
-                                            trackWithVertexRefSelectorBeforeSorting4D *
-                                            trackRefsForJetsBeforeSorting4D *
-                                            unsortedOfflinePrimaryVertices4D *
-                                            offlinePrimaryVertices4D *
-                                            offlinePrimaryVertices4DWithBS 
+                                            tktimeassoc *
+                                            vertexreco4d
                                             )
+
+_phase2_tktiminglayer_vertexreco = cms.Sequence( tktimeassoc *
+                                                 vertexreco.copy() *
+                                                 vertexreco1d
+                                            )
+
+_phase2_tktimingminiaod_vertexreco = cms.Sequence( vertexreco.copy() *
+                                                   vertexreco1d
+                                            )
+
+
 
 from Configuration.Eras.Modifier_phase2_timing_cff import phase2_timing
 phase2_timing.toReplaceWith(vertexreco, _phase2_tktiming_vertexreco)
 
+from Configuration.Eras.Modifier_phase2_timing_layer_cff import phase2_timing_layer
+phase2_timing_layer.toReplaceWith(vertexreco, _phase2_tktiminglayer_vertexreco)
+phase2_timing_layer.toReplaceWith(unsortedOfflinePrimaryVertices, unsortedOfflinePrimaryVertices4D)
+phase2_timing_layer.toReplaceWith(offlinePrimaryVertices, offlinePrimaryVertices4D)
+phase2_timing_layer.toReplaceWith(offlinePrimaryVerticesWithBS, offlinePrimaryVertices4DWithBS)
+phase2_timing_layer.toModify(offlinePrimaryVertices, vertices = cms.InputTag("unsortedOfflinePrimaryVertices"), particles = cms.InputTag("trackRefsForJetsBeforeSorting"))
+phase2_timing_layer.toModify(offlinePrimaryVerticesWithBS, vertices = cms.InputTag("unsortedOfflinePrimaryVertices","WithBS"), particles = cms.InputTag("trackRefsForJetsBeforeSorting"))
+
+from Configuration.Eras.Modifier_phase2_timing_miniaod_cff import phase2_timing_miniaod
+phase2_timing_miniaod.toReplaceWith(vertexreco, _phase2_tktimingminiaod_vertexreco)
+phase2_timing_miniaod.toModify(offlinePrimaryVertices, jets = cms.InputTag("ak4PFJets"))
+phase2_timing_miniaod.toModify(offlinePrimaryVerticesWithBS, jets = cms.InputTag("ak4PFJets"))
+phase2_timing_miniaod.toModify(offlinePrimaryVertices1D, jets = cms.InputTag("ak4PFJets"))
+phase2_timing_miniaod.toModify(offlinePrimaryVertices1DWithBS, jets = cms.InputTag("ak4PFJets"))

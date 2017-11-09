@@ -29,9 +29,14 @@ puppi = cms.EDProducer("PuppiProducer",#cms.PSet(#"PuppiProducer",
                        puppiForLeptons = cms.bool(False),
                        UseDeltaZCut   = cms.bool(True),
                        DeltaZCut      = cms.double(0.3),
+                       UseTime        = cms.bool(False),
+                       DeltaTSigCut   = cms.double(3.0),
 		       PtMaxNeutrals  = cms.double(200.),
                        candName       = cms.InputTag('particleFlow'),
                        vertexName     = cms.InputTag('offlinePrimaryVertices'),
+                       vertexForMultiplicityName = cms.InputTag('offlinePrimaryVertices'),
+                       PVAssignment = cms.InputTag(''),
+                       PVAssignmentQuality = cms.InputTag(''),
                        #candName      = cms.string('packedPFCandidates'),
                        #vertexName     = cms.string('offlineSlimmedPrimaryVertices'),
                        applyCHS       = cms.bool  (True),
@@ -43,6 +48,8 @@ puppi = cms.EDProducer("PuppiProducer",#cms.PSet(#"PuppiProducer",
                        clonePackedCands   = cms.bool(False), # should only be set to True for MiniAOD
                        vtxNdofCut     = cms.int32(4),
                        vtxZCut        = cms.double(24),
+                       UsePVAssignmentMap = cms.bool(False),
+                       AssignmentQualityForPrimary = cms.int32(2),
                        algos          = cms.VPSet( 
                         cms.PSet( 
                          etaMin = cms.vdouble(0.),
@@ -85,17 +92,20 @@ puppi = cms.EDProducer("PuppiProducer",#cms.PSet(#"PuppiProducer",
 from Configuration.Eras.Modifier_phase2_common_cff import phase2_common
 phase2_common.toModify(
     puppi,
-    DeltaZCut = cms.double(0.1),
+    UseDeltaZCut   = cms.bool(False),
+    UsePVAssignmentMap = cms.bool(True),
+    PVAssignment = cms.InputTag('primaryVertexAssociation','original'),
+    PVAssignmentQuality = cms.InputTag('primaryVertexAssociation','original'),
     algos = cms.VPSet( 
         cms.PSet( 
-             etaMin = cms.vdouble(0.,  2.5),
-             etaMax = cms.vdouble(2.5, 3.5),
-             ptMin  = cms.vdouble(0.,  0.), #Normally 0
-             MinNeutralPt   = cms.vdouble(0.2, 0.2),
-             MinNeutralPtSlope   = cms.vdouble(0.015, 0.030),
-             RMSEtaSF = cms.vdouble(1.0, 1.0),
-             MedEtaSF = cms.vdouble(1.0, 1.0),
-             EtaMaxExtrap = cms.double(2.0),
+             etaMin = cms.vdouble(0., 1.5, 2.5, 3.0),
+             etaMax = cms.vdouble(1.5, 2.5, 3.0, 3.5),
+             ptMin  = cms.vdouble(0.,  0., 0., 0.), #Normally 0
+             MinNeutralPt   = cms.vdouble(0.2, 0.2, 0.2, 0.2),
+             MinNeutralPtSlope   = cms.vdouble(0.015,0.015, 0.030, 0.030),
+             RMSEtaSF = cms.vdouble(1.0, 1.0, 1.0, 1.0),
+             MedEtaSF = cms.vdouble(1.0, 1.0, 1.0, 1.0),
+             EtaMaxExtrap = cms.double(-1.0),
              puppiAlgos = puppiCentral
         ), cms.PSet( 
              etaMin              = cms.vdouble( 3.5),
@@ -105,8 +115,15 @@ phase2_common.toModify(
              MinNeutralPtSlope   = cms.vdouble(0.08),
              RMSEtaSF            = cms.vdouble(1.0 ),
              MedEtaSF            = cms.vdouble(0.75),
-             EtaMaxExtrap        = cms.double( 2.0),
+             EtaMaxExtrap        = cms.double( -1.0),
              puppiAlgos = puppiForward
        )
     )
+)
+
+from Configuration.Eras.Modifier_phase2_timing_layer_cff import phase2_timing_layer
+phase2_timing_layer.toModify(
+    puppi,
+    UseTime = cms.bool(True),
+    vertexForMultiplicityName = cms.InputTag('offlinePrimaryVertices1D'),
 )

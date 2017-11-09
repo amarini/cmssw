@@ -10,3 +10,6 @@ pfPileUp = cms.EDProducer(
     verbose = cms.untracked.bool(False),
     checkClosestZVertex = cms.bool(True)
     )
+
+from Configuration.Eras.Modifier_phase2_timing_miniaod_cff import phase2_timing_miniaod
+phase2_timing_miniaod.toModify(pfPileUp, PFCandidates = cms.InputTag("particleFlowPtrs") )
