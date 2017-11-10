@@ -6,6 +6,8 @@
 #include "TrackingTools/IPTools/interface/IPTools.h"
 #include "FWCore/Utilities/interface/isFinite.h"
 
+//TODO. eventually precompute them
+#include "TMath.h"
 
 std::pair<int,PrimaryVertexAssignment::Quality>
 PrimaryVertexAssignment::chargedHadronVertex( const reco::VertexCollection& vertices,
@@ -46,8 +48,17 @@ PrimaryVertexAssignment::chargedHadronVertex( const reco::VertexCollection& vert
       double dt = std::abs(time-iv->t());
       
       bool useTimeVtx = useTime && iv->tError()>0.;
-      
-      if ((dz < maxDzForHighRankedAssignment_ or dz/track->dzError() < maxDzSigForHighRankedAssignment_ ) and (!useTimeVtx or dt/timeReso < maxDtSigForHighRankedAssignment_)) {
+
+      double dzErr = track->dzError();
+    
+      //double TODO weight differently the two components?
+      double chi2 =  (useTimeVtx) ? ( dz*dz / (dzErr*dzErr) + dt*dt/(timeReso*timeReso)) : dz*dz / (dzErr*dzErr); 
+
+      double sigma = 2.; // cut at 2 sigmas, TODO: make configurable
+      double quantile = TMath::Erf(sigma/TMath::Sqrt(2));
+      double cut = TMath::ChisquareQuantile(quantile,(useTimeVtx)?2:1);
+      //if ((dz < maxDzForHighRankedAssignment_ or dz/track->dzError() < maxDzSigForHighRankedAssignment_ ) and (!useTimeVtx or dt/timeReso < maxDtSigForHighRankedAssignment_)) { //}
+      if ( chi2 < cut) {
         return std::pair<int,PrimaryVertexAssignment::Quality>(ivtx,PrimaryVertexAssignment::PrimaryDz);
       }
   }
