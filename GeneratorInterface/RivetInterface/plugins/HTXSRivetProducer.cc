@@ -4,9 +4,14 @@
  *
  * $Id: HTXSRivetProducer.cc,v 1.1 2016/09/27 13:07:29 dsperka Exp $
  *
+ * modified by Andrea Carlo Marini: Fri Dec 28 12:53:52 CET 2018
+ *  - using edm:one instead of edm:stream -> Exception is thrown when attempting to read Run info. TODO: find an alternative.
+ *  - test: it seems to work anyhow ? 
  */
 
-#include "FWCore/Framework/interface/stream/EDProducer.h"
+#include "FWCore/Framework/interface/EDProducer.h"
+#include "FWCore/Framework/interface/one/EDProducer.h"
+//#include "FWCore/Framework/interface/stream/EDProducer.h"
 #include "FWCore/Framework/interface/Event.h"
 #include "FWCore/ParameterSet/interface/ParameterSet.h"
 #include "FWCore/Framework/interface/Run.h"
@@ -28,7 +33,8 @@ using namespace Rivet;
 using namespace edm;
 using namespace std;
 
-class HTXSRivetProducer : public edm::stream::EDProducer<> {
+//class HTXSRivetProducer : public edm::stream::EDProducer<> {
+class HTXSRivetProducer : public edm::one::EDProducer<edm::one::WatchRuns > {
 public:
     
     explicit HTXSRivetProducer(const edm::ParameterSet& cfg) : 
@@ -141,8 +147,8 @@ void HTXSRivetProducer::produce( edm::Event & iEvent, const edm::EventSetup & ) 
           else if ( _prodMode == "BBH"   ) m_HiggsProdMode = HTXS::BBH;
           else if ( _prodMode == "TH"    ) m_HiggsProdMode = HTXS::TH;
           else if ( _prodMode == "AUTO"  ) {
-              edm::LogInfo ("HTXSRivetProducer") <<"Using AUTO for HiggsProdMode, found it to be: "<<m_HiggsProdMode<< "\n";
-              edm::LogInfo ("HTXSRivetProducer") <<"(UNKNOWN=0, GGF=1, VBF=2, WH=3, QQ2ZH=4, GG2ZH=5, TTH=6, BBH=7, TH=8)"<<endl;
+              edm::LogWarning ("HTXSRivetProducer") <<"Using AUTO for HiggsProdMode, found it to be: "<<m_HiggsProdMode<< "\n";
+              edm::LogWarning ("HTXSRivetProducer") <<"(UNKNOWN=0, GGF=1, VBF=2, WH=3, QQ2ZH=4, GG2ZH=5, TTH=6, BBH=7, TH=8)"<<endl;
           } else {
               throw cms::Exception("HTXSRivetProducer") << "ProductionMode must be one of: GGF,VBF,WH,ZH,QQ2ZH,GG2ZH,TTH,BBH,TH,AUTO " ; 
           }
@@ -182,8 +188,11 @@ void HTXSRivetProducer::beginRun(edm::Run const& iRun, edm::EventSetup const& es
     if (_prodMode == "AUTO") {    
 
         edm::Handle<LHERunInfoProduct> run;
+        //edm::LogError ("HTXSRivetProducer") << "ProdMode=AUTO: Before get by label"<<std::endl;
         bool product_exists = iRun.getByLabel( edm::InputTag("externalLHEProducer"), run );
+        //bool product_exists = iRun.getByToken( _lheRunInfo, run );
         if( product_exists ){
+          edm::LogInfo ("HTXSRivetProducer") << " Reading product from externalLHEPRoducer"<<std::endl;
            
           typedef std::vector<LHERunInfoProduct::Header>::const_iterator headers_const_iterator;
           LHERunInfoProduct myLHERunInfoProduct = *(run.product());
@@ -247,8 +256,10 @@ void HTXSRivetProducer::beginRun(edm::Run const& iRun, edm::EventSetup const& es
                 
               if ( m_HiggsProdMode != HTXS::UNKNOWN) break;
         }
+      }else{ // product exist
+          edm::LogError ("HTXSRivetProducer") << " Unable to product from externalLHEPRoducer"<<std::endl;
       }
-    }
+    } //prodMode=AUTO
 }
 
 
