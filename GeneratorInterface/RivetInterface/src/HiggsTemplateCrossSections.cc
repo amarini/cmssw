@@ -408,47 +408,72 @@ namespace Rivet {
                 using namespace HTXS::Stage1p1;
                 int Njets=jets.size(), ctrlHiggs = std::abs(higgs.rapidity())<2.5, fwdHiggs = !ctrlHiggs;
                 //double pTj1 = !jets.empty() ? jets[0].momentum().pt() : 0;
-                int vbfTopo = vbfTopology(jets,higgs);
+                //int vbfTopo = vbfTopology(jets,higgs);
+                auto mjj=getMjj(jets);
 
                 // 1. GGF Stage 1 categories
-                //    Following YR4 write-up: XXXXX
                 if (prodMode==HTXS::GGF || (prodMode==HTXS::GG2ZH && quarkDecay(V)) ) {
                     if (fwdHiggs)        return GG2H_FWDH;
-                    if (Njets==0)        return GG2H_0J;
-                    else if (Njets==1)   return Category(GG2H_1J_PTH_0_60+getBin(higgs.pt(),{0,60,120,200}));
-                    else if (Njets>=2) {
-                        // events with pT_H>200 get priority over VBF cuts
-                        if(higgs.pt()<=200){
-                            if      (vbfTopo==2) return GG2H_VBFTOPO_JET3VETO;
-                            else if (vbfTopo==1) return GG2H_VBFTOPO_JET3;
+
+                    if (higgs.pt() >= 200) return GG2H_PTH_GE200;
+                    if (Njets==0)
+                    {
+                        if(higgs.pt() <10) return  GG2H_PTH_0_200_0J_PTH_0_10;
+                        else return GG2H_PTH_0_200_0J_PTH_10_200;
+                    }
+
+                    if (Njets==1)
+                    {
+                        if (higgs.pt()<60 ) return GG2H_PTH_0_200_1J_PTH_0_60;
+                        else if (higgs.pt()<120) return GG2H_PTH_0_200_1J_PTH_60_120;
+                        else return GG2H_PTH_0_200_1J_PTH_120_200;
+                    }
+
+                    if (Njets >=2)
+                    {
+                        if (mjj <350){
+                            if (higgs.pt()<60) return GG2H_PTH_0_200_GE2J_MJJ_0_350_PTH_0_60;
+                            else if (higgs.pt()<120) return GG2H_PTH_0_200_GE2J_MJJ_0_350_PTH_60_120;
+                            else return GG2H_PTH_0_200_GE2J_MJJ_0_350_PTH_120_200;
                         }
-                        // Njets >= 2jets without VBF topology
-                        return Category(GG2H_GE2J_PTH_0_60+getBin(higgs.pt(),{0,60,120,200}));
-                    } //pth <200
+
+                        if (mjj>=350){
+                            if (higgs.pt()<60) return GG2H_PTH_0_200_GE2J_MJJ_GE350_PTH_0_60; 
+                            else if (higgs.pt()<120) return GG2H_PTH_0_200_GE2J_MJJ_GE350_PTH_60_120;
+                            else return GG2H_PTH_0_200_GE2J_MJJ_GE350_PTH_120_200;
+                        }
+                    }
+
                 } // ggh
                 // 2. Electroweak qq->Hqq Stage 1 categories
                 else if (prodMode==HTXS::VBF || ( isVH(prodMode) && quarkDecay(V)) ) {
                     if (std::abs(higgs.rapidity())>2.5) return QQ2HQQ_FWDH;
-                    if (higgs.pt()>=200) return QQ2HQQ_PTH_GT200;
-                    if (higgs.pt() <200 ){
-                        if (Njets==0) { return QQ2HQQ_PTH_0_200_0J;}
-                        if (Njets==1) { return QQ2HQQ_PTH_0_200_1J;}
-                        if (Njets >=2){
-                            double mjj=getMjj(jets);
-                            double ptHjj= getPtHjj(jets, higgs);
-                            if (mjj <60) return QQ2HQQ_PTH_0_200_GE2J_MJJ_0_60;
-                            else if (mjj <120) return QQ2HQQ_PTH_0_200_GE2J_MJJ_60_120;
-                            else if (mjj <350) return QQ2HQQ_PTH_0_200_GE2J_MJJ_120_350;
-                            else if (mjj <700){
-                                if (ptHjj<25) return QQ2HQQ_PTH_0_200_GE2J_MJJ_350_700_PTHJJ_0_25;
-                                else return QQ2HQQ_PTH_0_200_GE2J_MJJ_350_700_PTHJJ_GT25;
+                    if (Njets==0) { return QQ2HQQ_0J;}
+                    if (Njets==1) { return QQ2HQQ_1J;}
+                    double mjj=getMjj(jets);
+                    double ptHjj= getPtHjj(jets, higgs);
+
+                    if (Njets>=2){
+                        if (mjj<350){
+                           if(mjj<60) return QQ2HQQ_GE2J_MJJ_0_60;  
+                           else if (mjj<120) return QQ2HQQ_GE2J_MJJ_60_120;
+                           else return QQ2HQQ_GE2J_MJJ_120_350;
+                        }
+                        if (mjj>=350){
+                            if (higgs.pt() <200)
+                            {
+                                if (mjj<700 and ptHjj<25) return QQ2HQQ_GE2J_MJJ_GE350_PTH_0_200_MJJ_350_700_PTHJJ_0_25;
+                                if (mjj <700 and ptHjj>=25) return QQ2HQQ_GE2J_MJJ_GE350_PTH_0_200_MJJ_350_700_PTHJJ_GE25;
+                                if (mjj >=700 and ptHjj <25) return QQ2HQQ_GE2J_MJJ_GE350_PTH_0_200_MJJ_GE700_PTHJJ_0_25;
+                                if (mjj >=700 and ptHjj >=25) return QQ2HQQ_GE2J_MJJ_GE350_PTH_0_200_MJJ_GE700_PTHJJ_GE25;
                             }
-                            else { //if (mjj>=700)
-                                if (ptHjj<25) return QQ2HQQ_PTH_0_200_GE2J_MJJ_GT700_PTHJJ_0_25;
-                                else return QQ2HQQ_PTH_0_200_GE2J_MJJ_GT700_PTHJJ_GT25;
-                            }// mjj >=700
-                        }//njets >=2
-                    } //ptH<200
+                            if (higgs.pt()>=200)
+                            {
+                                return QQ2HQQ_GE2J_MJJ_GE350_PTH_GE200; 
+                            } 
+                        }
+                    }
+
                 } // VBF
                 // 3. WH->Hlv categories
                 else if (prodMode==HTXS::WH) {
