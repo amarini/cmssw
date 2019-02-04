@@ -409,7 +409,8 @@ namespace Rivet {
                 int Njets=jets.size(), ctrlHiggs = std::abs(higgs.rapidity())<2.5, fwdHiggs = !ctrlHiggs;
                 //double pTj1 = !jets.empty() ? jets[0].momentum().pt() : 0;
                 //int vbfTopo = vbfTopology(jets,higgs);
-                auto mjj=getMjj(jets);
+                double mjj=getMjj(jets);
+                double ptHjj= getPtHjj(jets, higgs);
 
                 // 1. GGF Stage 1 categories
                 if (prodMode==HTXS::GGF || (prodMode==HTXS::GG2ZH && quarkDecay(V)) ) {
@@ -437,10 +438,13 @@ namespace Rivet {
                             else return GG2H_PTH_0_200_GE2J_MJJ_0_350_PTH_120_200;
                         }
 
-                        if (mjj>=350){
-                            if (higgs.pt()<60) return GG2H_PTH_0_200_GE2J_MJJ_GE350_PTH_0_60; 
-                            else if (higgs.pt()<120) return GG2H_PTH_0_200_GE2J_MJJ_GE350_PTH_60_120;
-                            else return GG2H_PTH_0_200_GE2J_MJJ_GE350_PTH_120_200;
+                        if (mjj>=350 and mjj<700){
+                            if (ptHjj< 25) return  GG2H_PTH_0_200_GE2J_MJJ_350_700_PTHJJ_0_25;
+                            if (ptHjj >=25) return GG2H_PTH_0_200_GE2J_MJJ_350_700_PTHJJ_GE25;
+                        }
+                        if (mjj >=700){
+                            if (ptHjj< 25) return  GG2H_PTH_0_200_GE2J_MJJ_GE700_PTHJJ_0_25;
+                            if (ptHjj >=25) return GG2H_PTH_0_200_GE2J_MJJ_GE700_PTHJJ_GE25;
                         }
                     }
 
