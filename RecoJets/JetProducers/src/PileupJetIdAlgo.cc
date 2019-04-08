@@ -16,75 +16,96 @@
 const float large_val = std::numeric_limits<float>::max();
 
 // ------------------------------------------------------------------------------------------
-PileupJetIdAlgo::PileupJetIdAlgo(const edm::ParameterSet & ps, bool runMvas) 
-{
-	impactParTkThreshod_ = 1.;/// ps.getParameter<double>("impactParTkThreshod");
-	cutBased_ = false;
-	etaBinnedWeights_ = false;
-	runMvas_=runMvas;
-	//std::string label    = ps.getParameter<std::string>("label");
-	cutBased_ =  ps.getParameter<bool>("cutBased");
-	if(!cutBased_) 
-	  {
-	    etaBinnedWeights_ = ps.getParameter<bool>("etaBinnedWeights");
-	    if(etaBinnedWeights_){
 
-              const std::vector<edm::ParameterSet>& trainings = ps.getParameter<std::vector <edm::ParameterSet> >("trainings");
-              nEtaBins_ = ps.getParameter<int>("nEtaBins");
-              for(int v=0; v<nEtaBins_;v++){
-                tmvaEtaWeights_.push_back( edm::FileInPath(trainings.at(v).getParameter<std::string>("tmvaWeights")).fullPath() );
-                jEtaMin_.push_back( trainings.at(v).getParameter<double>("jEtaMin") );
-                jEtaMax_.push_back( trainings.at(v).getParameter<double>("jEtaMax") );
-              }
-              for(int v=0; v<nEtaBins_;v++){
-                tmvaEtaVariables_.push_back( trainings.at(v).getParameter<std::vector<std::string> >("tmvaVariables") );
-              }
-	    }
-	    else{
-	      tmvaWeights_                  = edm::FileInPath(ps.getParameter<std::string>("tmvaWeights")).fullPath();
-              tmvaVariables_       = ps.getParameter<std::vector<std::string> >("tmvaVariables");
-	    }
-	    tmvaMethod_          = ps.getParameter<std::string>("tmvaMethod");
-	    tmvaSpectators_      = ps.getParameter<std::vector<std::string> >("tmvaSpectators");
-	    version_             = ps.getParameter<int>("version");
-	  }
-        else version_ = USER;
-	edm::ParameterSet jetConfig = ps.getParameter<edm::ParameterSet>("JetIdParams");
-	for(int i0 = 0; i0 < 3; i0++) { 
-	  std::string lCutType                            = "Tight";
-	  if(i0 == PileupJetIdentifier::kMedium) lCutType = "Medium";
-	  if(i0 == PileupJetIdentifier::kLoose)  lCutType = "Loose";
-	  int nCut = 1;
-	  if(cutBased_) nCut++;
-	  for(int i1 = 0; i1 < nCut; i1++) {
-	    std::string lFullCutType = lCutType;
-	    if(cutBased_ && i1 == 0) lFullCutType = "BetaStar"+ lCutType; 
-	    if(cutBased_ && i1 == 1) lFullCutType = "RMS"     + lCutType; 
-	    std::vector<double> pt010  = jetConfig.getParameter<std::vector<double> >(("Pt010_" +lFullCutType).c_str());
-	    std::vector<double> pt1020 = jetConfig.getParameter<std::vector<double> >(("Pt1020_"+lFullCutType).c_str());
-	    std::vector<double> pt2030 = jetConfig.getParameter<std::vector<double> >(("Pt2030_"+lFullCutType).c_str());
-	    std::vector<double> pt3050 = jetConfig.getParameter<std::vector<double> >(("Pt3050_"+lFullCutType).c_str());
-	    if(!cutBased_) { 
-	      for(int i2 = 0; i2 < 4; i2++) mvacut_[i0][0][i2] = pt010 [i2];
-	      for(int i2 = 0; i2 < 4; i2++) mvacut_[i0][1][i2] = pt1020[i2];
-	      for(int i2 = 0; i2 < 4; i2++) mvacut_[i0][2][i2] = pt2030[i2];
-	      for(int i2 = 0; i2 < 4; i2++) mvacut_[i0][3][i2] = pt3050[i2];
-	    }
-	    if(cutBased_ && i1 == 0) { 
-	      for(int i2 = 0; i2 < 4; i2++) betaStarCut_[i0][0][i2] = pt010 [i2];
-	      for(int i2 = 0; i2 < 4; i2++) betaStarCut_[i0][1][i2] = pt1020[i2];
-	      for(int i2 = 0; i2 < 4; i2++) betaStarCut_[i0][2][i2] = pt2030[i2];
-	      for(int i2 = 0; i2 < 4; i2++) betaStarCut_[i0][3][i2] = pt3050[i2];
-	    }
-	    if(cutBased_ && i1 == 1) { 
-	      for(int i2 = 0; i2 < 4; i2++) rmsCut_[i0][0][i2] = pt010 [i2];
-	      for(int i2 = 0; i2 < 4; i2++) rmsCut_[i0][1][i2] = pt1020[i2];
-	      for(int i2 = 0; i2 < 4; i2++) rmsCut_[i0][2][i2] = pt2030[i2];
-	      for(int i2 = 0; i2 < 4; i2++) rmsCut_[i0][3][i2] = pt3050[i2];
-	    }
-	  }
-	}
-	setup();
+PileupJetIdAlgo::AlgoGBRForestsAndConstants::AlgoGBRForestsAndConstants(edm::ParameterSet const& ps, bool runMvas) :
+  cutBased_(ps.getParameter<bool>("cutBased")),
+  etaBinnedWeights_(false),
+  runMvas_(runMvas),
+  nEtaBins_(0),
+  label_(ps.getParameter<std::string>("label")),
+  mvacut_{},
+  rmsCut_{},
+  betaStarCut_{}
+ {
+
+  std::string tmvaWeights;
+  std::vector<std::string> tmvaEtaWeights;
+  std::vector<std::string> tmvaSpectators;
+  int version;
+
+  if (!cutBased_) {
+    etaBinnedWeights_ = ps.getParameter<bool>("etaBinnedWeights");
+    if (etaBinnedWeights_) {
+      const std::vector<edm::ParameterSet>& trainings = ps.getParameter<std::vector <edm::ParameterSet> >("trainings");
+      nEtaBins_ = ps.getParameter<int>("nEtaBins");
+      for (int v = 0; v < nEtaBins_; v++) {
+        tmvaEtaWeights.push_back( edm::FileInPath(trainings.at(v).getParameter<std::string>("tmvaWeights")).fullPath() );
+        jEtaMin_.push_back( trainings.at(v).getParameter<double>("jEtaMin") );
+        jEtaMax_.push_back( trainings.at(v).getParameter<double>("jEtaMax") );
+      }
+      for (int v = 0; v < nEtaBins_; v++) {
+        tmvaEtaVariables_.push_back( trainings.at(v).getParameter<std::vector<std::string> >("tmvaVariables") );
+      }
+    } else {
+      tmvaWeights = edm::FileInPath(ps.getParameter<std::string>("tmvaWeights")).fullPath();
+      tmvaVariables_ = ps.getParameter<std::vector<std::string> >("tmvaVariables");
+    }
+    tmvaMethod_ = ps.getParameter<std::string>("tmvaMethod");
+    tmvaSpectators = ps.getParameter<std::vector<std::string> >("tmvaSpectators");
+    version = ps.getParameter<int>("version");
+  } else {
+    version = USER;
+  }
+
+  edm::ParameterSet jetConfig = ps.getParameter<edm::ParameterSet>("JetIdParams");
+  for (int i0 = 0; i0 < 3; i0++) {
+    std::string lCutType                             = "Tight";
+    if (i0 == PileupJetIdentifier::kMedium) lCutType = "Medium";
+    if (i0 == PileupJetIdentifier::kLoose)  lCutType = "Loose";
+    int nCut = 1;
+    if(cutBased_) nCut++;
+    for (int i1 = 0; i1 < nCut; i1++) {
+      std::string lFullCutType = lCutType;
+      if (cutBased_ && i1 == 0) lFullCutType = "BetaStar"+ lCutType;
+      if (cutBased_ && i1 == 1) lFullCutType = "RMS"     + lCutType;
+      std::vector<double> pt010  = jetConfig.getParameter<std::vector<double> >(("Pt010_" +lFullCutType).c_str());
+      std::vector<double> pt1020 = jetConfig.getParameter<std::vector<double> >(("Pt1020_"+lFullCutType).c_str());
+      std::vector<double> pt2030 = jetConfig.getParameter<std::vector<double> >(("Pt2030_"+lFullCutType).c_str());
+      std::vector<double> pt3050 = jetConfig.getParameter<std::vector<double> >(("Pt3050_"+lFullCutType).c_str());
+      if (!cutBased_) {
+        for (int i2 = 0; i2 < nEtaBins_; i2++) mvacut_[i0][0][i2] = pt010 [i2];
+        for (int i2 = 0; i2 < nEtaBins_; i2++) mvacut_[i0][1][i2] = pt1020[i2];
+        for (int i2 = 0; i2 < nEtaBins_; i2++) mvacut_[i0][2][i2] = pt2030[i2];
+        for (int i2 = 0; i2 < nEtaBins_; i2++) mvacut_[i0][3][i2] = pt3050[i2];
+      }
+      if (cutBased_ && i1 == 0) {
+        for (int i2 = 0; i2 < nEtaBins_; i2++) betaStarCut_[i0][0][i2] = pt010 [i2];
+        for (int i2 = 0; i2 < nEtaBins_; i2++) betaStarCut_[i0][1][i2] = pt1020[i2];
+        for (int i2 = 0; i2 < nEtaBins_; i2++) betaStarCut_[i0][2][i2] = pt2030[i2];
+        for (int i2 = 0; i2 < nEtaBins_; i2++) betaStarCut_[i0][3][i2] = pt3050[i2];
+      }
+      if (cutBased_ && i1 == 1) {
+        for (int i2 = 0; i2 < nEtaBins_; i2++) rmsCut_[i0][0][i2] = pt010 [i2];
+        for (int i2 = 0; i2 < nEtaBins_; i2++) rmsCut_[i0][1][i2] = pt1020[i2];
+        for (int i2 = 0; i2 < nEtaBins_; i2++) rmsCut_[i0][2][i2] = pt2030[i2];
+        for (int i2 = 0; i2 < nEtaBins_; i2++) rmsCut_[i0][3][i2] = pt3050[i2];
+      }
+    }
+  }
+
+  if ( ! cutBased_ ) {
+    assert( tmvaMethod_.empty() || ((! tmvaVariables_.empty() || ( !tmvaEtaVariables_.empty() )) && version == USER) );
+  }
+
+  if (( ! cutBased_ ) && (runMvas_)) {
+    if (etaBinnedWeights_) {
+      for (int v = 0; v < nEtaBins_; v++) {
+        etaReader_.push_back(getMVA(tmvaEtaVariables_.at(v), tmvaEtaWeights.at(v), tmvaSpectators));
+      }
+    } else {
+      reader_ = getMVA(tmvaVariables_, tmvaWeights, tmvaSpectators);
+    }
+  }
 }
 
 // ------------------------------------------------------------------------------------------
