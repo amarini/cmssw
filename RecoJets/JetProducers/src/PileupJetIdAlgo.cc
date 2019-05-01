@@ -241,9 +241,11 @@ std::pair<int,int> PileupJetIdAlgo::getJetIdKey(float jetPt, float jetEta)
   if(jetPt >= 30              ) ptId = 3;                                                                                          
   
   int etaId = 0;
-  if(std::abs(jetEta) >= 2.5  && std::abs(jetEta) < 2.75) etaId = 1;                                                              
-  if(std::abs(jetEta) >= 2.75 && std::abs(jetEta) < 3.0 ) etaId = 2;                                                              
-  if(std::abs(jetEta) >= 3.0  && std::abs(jetEta) < 5.0 ) etaId = 3;                                 
+  for(int v = 0; v < cache_->nEtaBins(); v++){
+      if(std::abs(jetEta) >= cache_->jEtaMin().at(v) && std::abs(jetEta) < cache_->jEtaMax().at(v)) {
+          etaId = v;
+      }
+  }
 
   return std::pair<int,int>(ptId,etaId);
 }
