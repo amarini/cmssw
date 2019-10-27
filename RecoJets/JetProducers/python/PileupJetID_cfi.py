@@ -11,6 +11,8 @@ _chsalgos_74x = cms.VPSet(full_74x_chs,cutbased)
 _chsalgos_76x = cms.VPSet(full_76x_chs,cutbased)
 _chsalgos_80x = cms.VPSet(full_80x_chs,cutbased)
 _chsalgos_81x = cms.VPSet(full_81x_chs,cutbased)
+_chsalgos_94x = cms.VPSet(full_94x_chs,cutbased)
+_chsalgos_102x = cms.VPSet(full_102x_chs,cutbased)
 
 _stdalgos    = _chsalgos_81x
 
