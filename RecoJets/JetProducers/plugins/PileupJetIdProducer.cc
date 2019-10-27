@@ -203,6 +203,7 @@ PileupJetIdProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 			mvafiller.insert(jetHandle,mva.begin(),mva.end());
 			mvafiller.fill();
 			iEvent.put(std::move(mvaout),ialgo.first+"Discriminant");
+            std::cout<<"DEBUG"<<":PuID:"<<" putting: '"<<ialgo.first+"Discriminant"<<"'"<<std::endl;
 			
 			// WP
 			vector<int> & idflag = idflags[ialgo.first];
@@ -211,6 +212,7 @@ PileupJetIdProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 			idflagfiller.insert(jetHandle,idflag.begin(),idflag.end());
 			idflagfiller.fill();
 			iEvent.put(std::move(idflagout),ialgo.first+"Id");
+            std::cout<<"DEBUG"<<":PuID:"<<" putting: '"<<ialgo.first+"Id"<<"'"<<std::endl;
 		}
 	}
 	// input variables
@@ -221,6 +223,7 @@ PileupJetIdProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 		idsfiller.insert(jetHandle,ids.begin(),ids.end());
 		idsfiller.fill();
 		iEvent.put(std::move(idsout));
+        std::cout<<"DEBUG"<<":PuID:"<<" putting: idsout"<<std::endl;
 	}
 }
 
