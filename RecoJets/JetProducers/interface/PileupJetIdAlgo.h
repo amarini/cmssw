@@ -27,21 +27,20 @@
 class PileupJetIdAlgo {
 public:
 	enum version_t { USER=-1, PHILv0=0 };
-	
-	PileupJetIdAlgo(int version=PHILv0, const std::string & tmvaWeight="", const std::string & tmvaMethod="", 
-			Float_t impactParTkThreshod_=1., const std::vector<std::string> & tmvaVariables= std::vector<std::string>(), bool runMvas=true);
-	PileupJetIdAlgo(const edm::ParameterSet & ps, bool runMvas);
+
+	class AlgoGBRForestsAndConstants;
+
+	PileupJetIdAlgo(AlgoGBRForestsAndConstants const* cache);
 	~PileupJetIdAlgo(); 
 	
 	PileupJetIdentifier computeIdVariables(const reco::Jet * jet, 
 					       float jec, const reco::Vertex *, const reco::VertexCollection &, double rho);
 
 	void set(const PileupJetIdentifier &);
-        std::unique_ptr<const GBRForest> getMVA(const std::vector<std::string> &, const std::string &);
         float getMVAval(const std::vector<std::string> &, const std::unique_ptr<const GBRForest> &);
 	PileupJetIdentifier computeMva();
-	const std::string method() const { return tmvaMethod_; }
-	
+	const std::string method() const { return cache_->tmvaMethod(); }
+
 	std::string dumpVariables() const;
 
 	typedef std::map<std::string,std::pair<float *,float> > variables_list_t;
@@ -110,36 +109,12 @@ public:
 
 protected:
 
-	void setup(); 
 	void runMva(); 
-	void bookReader();	
 	void resetVariables();
 	void initVariables();
 
-	
 	PileupJetIdentifier internalId_;
 	variables_list_t variables_;
-
-	std::unique_ptr<const GBRForest> reader_;
-        std::vector<std::unique_ptr<const GBRForest>> etaReader_;
-	std::string tmvaWeights_, tmvaMethod_;
-        std::vector<std::string> tmvaEtaWeights_;
-	std::vector<std::string> tmvaVariables_;
-        std::vector<std::vector<std::string>> tmvaEtaVariables_;
-	std::vector<std::string> tmvaSpectators_;
-	std::map<std::string,std::string> tmvaNames_;
-	
-	int   version_;
-	float impactParTkThreshod_;
-	bool    cutBased_; 
-	bool    etaBinnedWeights_;
-        int   nEtaBins_;
-        std::vector<double> jEtaMin_;
-        std::vector<double> jEtaMax_;
-	bool runMvas_;
-	float mvacut_     [3][4][4]; //Keep the array fixed
-	float rmsCut_     [3][4][4]; //Keep the array fixed
-	float betaStarCut_[3][4][4]; //Keep the array fixed
+	AlgoGBRForestsAndConstants const* cache_;
 };
-
 #endif
