@@ -330,8 +330,20 @@ float MahiFit::calculateArrivalTime(unsigned int itIndex) const {
 
   //FIXME: avoid solve full equation for one element
   SampleVector residuals = nnlsWork_.pulseMat * nnlsWork_.ampVec - nnlsWork_.amplitudes;
+#ifdef FULL_AND_ACCURATE
   PulseVector solution = nnlsWork_.pulseDerivMat.colPivHouseholderQr().solve(residuals);
   float t = std::clamp((float)solution.coeff(itIndex), -timeLimit_, timeLimit_);
+#else
+  // Idea: Use the pesudo inverse to solve  the problem DS=R
+  // -> Dt D S = Dt R
+  // -> Use Cramer to solve for column i
+  SampleVector Rt=nnlsWork_.pulseDerivMat.transpose()*residuals; 
+  FullSampleMatrix A = nnlsWork_.pulseDerivMat.transpose() * nnlsWork_.pulseDerivMat;
+  double den= A.determinant();
+  for(long j=0; j< A.cols() ;++j) A(itIndex,j) =  Rt(j); 
+  double num= A.determinant();
+  float t=num/den;
+#endif
 
   return t;
 }
