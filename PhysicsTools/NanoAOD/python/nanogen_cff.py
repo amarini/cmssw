@@ -14,6 +14,8 @@ nanoMetadata = cms.EDProducer("UniqueStringProducer",
     )
 )
 
+
+
 nanogenSequence = cms.Sequence(
     nanoMetadata+
     cms.Sequence(particleLevelTask)+
@@ -21,6 +23,7 @@ nanogenSequence = cms.Sequence(
     patJetPartonsNano+
     genJetFlavourAssociation+
     genJetFlavourTable+
+    genSubJetAK8Table+
     genJetAK8Table+
     genJetAK8FlavourAssociation+
     genJetAK8FlavourTable+
@@ -92,7 +95,12 @@ def customizeNanoGEN(process):
     process.genJetAK8Table.src = "ak8GenJetsNoNu"
     process.tauGenJetsForNano.GenParticles = "genParticles"
     process.genVisTaus.srcGenParticles = "genParticles"
-
+    process.load("RecoJets.JetProducers.ak8GenJets_cfi")
+    process.ak8GenJetsNoNuConstituents =  process.ak8GenJetsConstituents.clone(src='ak8GenJetsNoNu')
+    process.ak8GenJetsNoNuSoftDrop = process.ak8GenJetsSoftDrop.clone(src=cms.InputTag('ak8GenJetsNoNuConstituents', 'constituents'))
+    process.genSubJetAK8Table.src = "ak8GenJetsNoNuSoftDrop"
+    process.nanogenSequence.insert(0, process.ak8GenJetsNoNuSoftDrop)
+    process.nanogenSequence.insert(0, process.ak8GenJetsNoNuConstituents)
     # In case customizeNanoGENFromMini has already been called
     process.nanogenSequence.remove(process.genParticles2HepMCHiggsVtx)
     process.nanogenSequence.remove(process.genParticles2HepMC)
