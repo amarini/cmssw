@@ -370,18 +370,30 @@ def nanoAOD_addAK4CHS(process):
     process.jetTable.variables.hfEmEF            = Var("HFEMEnergyFraction()",float, doc="electromagnetic Energy Fraction in HF",precision=15)
     process.jetTable.variables.muEF              = Var("muonEnergyFraction()", float, doc="muon Energy Fraction", precision=15)
 
-    del process.updatedJetsWithUserData.userFloats.leadTrackPt
-    del process.updatedJetsWithUserData.userFloats.leptonPtRelv0
-    del process.updatedJetsWithUserData.userFloats.leptonPtRelInvv0
-    del process.updatedJetsWithUserData.userFloats.leptonDeltaR
-    del process.updatedJetsWithUserData.userFloats.vtxPt
-    del process.updatedJetsWithUserData.userFloats.vtxMass
-    del process.updatedJetsWithUserData.userFloats.vtx3dL
-    del process.updatedJetsWithUserData.userFloats.vtx3deL
-    del process.updatedJetsWithUserData.userInts.vtxNtrk
-    del process.updatedJetsWithUserData.userInts.leptonPdgId
-    del process.bjetNN
-    del process.cjetNN
+    if hasattr(process.updatedJetsWithUserData.userFloats, 'leadTrackPt'):
+        del process.updatedJetsWithUserData.userFloats.leadTrackPt
+    if hasattr(process.updatedJetsWithUserData.userFloats, 'leptonPtRelv0'):
+        del process.updatedJetsWithUserData.userFloats.leptonPtRelv0
+    if hasattr(process.updatedJetsWithUserData.userFloats, 'leptonPtRelInvv0'):
+        del process.updatedJetsWithUserData.userFloats.leptonPtRelInvv0
+    if hasattr(process.updatedJetsWithUserData.userFloats, 'leptonDeltaR'):
+        del process.updatedJetsWithUserData.userFloats.leptonDeltaR
+    if hasattr(process.updatedJetsWithUserData.userFloats, 'vtxPt'):
+        del process.updatedJetsWithUserData.userFloats.vtxPt
+    if hasattr(process.updatedJetsWithUserData.userFloats, 'vtxMass'):
+        del process.updatedJetsWithUserData.userFloats.vtxMass
+    if hasattr(process.updatedJetsWithUserData.userFloats, 'vtx3dL'):
+        del process.updatedJetsWithUserData.userFloats.vtx3dL
+    if hasattr(process.updatedJetsWithUserData.userFloats, 'vtx3deL'):
+        del process.updatedJetsWithUserData.userFloats.vtx3deL
+    if hasattr(process.updatedJetsWithUserData.userInts, 'vtxNtrk'):
+        del process.updatedJetsWithUserData.userInts.vtxNtrk
+    if hasattr(process.updatedJetsWithUserData.userInts, 'leptonPdgId'):
+        del process.updatedJetsWithUserData.userInts.leptonPdgId
+    if hasattr(process, 'bjetNN'):
+        del process.bjetNN
+    if hasattr(process, 'cjetNN'):
+        del process.cjetNN
 
 
     #

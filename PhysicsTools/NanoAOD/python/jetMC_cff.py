@@ -118,8 +118,9 @@ subjetMCTable = simplePATJetFlatTableProducer.clone(
 )
 
 genParticlesForJetsCharged = cms.EDFilter("CandPtrSelector",
-    src = cms.InputTag("prunedGenParticles"),  # or "packedGenParticles" if available
-    cut = cms.string("charge != 0 && pt > 0.3 && status == 1 && abs(pdgId) != 12 && abs(pdgId) != 14 && abs(pdgId) != 16")
+    #src = cms.InputTag("prunedGenParticles"),  # or "packedGenParticles" if available
+    src = cms.InputTag("packedGenParticles"),
+    cut = cms.string("charge != 0 && pt > 0.5 && status == 1 && abs(pdgId) != 12 && abs(pdgId) != 14 && abs(pdgId) != 16 && abs(eta)<2.5")
 )
 
 ak4GenJetsChargedOnly = ak4GenJets.clone(src = cms.InputTag("genParticlesForJetsCharged"), rParam = cms.double(0.4), jetAlgorithm=cms.string("AntiKt"), doAreaFastjet = False, jetPtMin=1)
